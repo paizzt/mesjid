@@ -1,0 +1,915 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { Search, ArrowRight, Building2, TrendingUp, TrendingDown, FileText, Info, Wallet, CreditCard, ChevronLeft, ChevronRight, Download, CheckCircle2, Calendar, Target, Table as TableIcon, BarChart3, Heart, Users, Filter, Loader2, Landmark } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, PieChart as RePieChart, Pie, Legend } from 'recharts';
+
+/**
+ * MOCK DATA - Simulating a Backend Database
+ * Expanded with Cash Breakdown (Rekap Kas)
+ */
+const MOSQUES_DB = [
+  {
+    id: 1,
+    name: "Masjid Raya Al-Falah",
+    location: "Jakarta Selatan, DKI Jakarta",
+    verified: true,
+    lastUpdated: "17 Jan 2026",
+    assets: {
+      unrestricted: 450000000,
+      restricted: 850000000,
+      liabilities: 15000000,
+    },
+    currentPeriod: {
+      openingBalance: 275000000, // Saldo Awal
+      surplus: 25000000,
+      incomeTotal: 125000000,
+      expenseTotal: 100000000,
+      closingBalance: 300000000, // Saldo Akhir (Awal + Surplus)
+    },
+    // FEATURE UPDATE: Cash Breakdown Locations
+    cashBreakdown: [
+      { type: 'bank', name: 'Bank Syariah Indonesia (BSI)', number: '7123456789', balance: 200000000, color: 'bg-emerald-100 text-emerald-700' },
+      { type: 'bank', name: 'Bank Muamalat', number: '1234567890', balance: 50000000, color: 'bg-purple-100 text-purple-700' },
+      { type: 'cash', name: 'Kas Tunai (Brankas)', number: '-', balance: 50000000, color: 'bg-orange-100 text-orange-700' },
+    ],
+    restrictedProjects: [
+      { name: "Renovasi Kubah", collected: 500000000, target: 700000000, percent: 71 },
+      { name: "Santunan Yatim & Dhuafa", collected: 150000000, target: 200000000, percent: 75 },
+      { name: "Pengadaan Ambulans", collected: 200000000, target: 250000000, percent: 80 }
+    ],
+    donorsByYear: {
+      '2026': [
+        { name: "H. Abdullah Syukri", category: "Donatur Tetap", monthly: [10000000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 10000000 },
+        { name: "Hamba Allah (007)", category: "Infaq Jumat", monthly: [4000000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 4000000 },
+        { name: "Hj. Siti Aminah", category: "Donatur Tetap", monthly: [3000000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 3000000 },
+      ],
+      '2025': [
+        { name: "H. Abdullah Syukri", category: "Donatur Tetap", monthly: [10000000, 10000000, 10000000, 10000000, 10000000, 10000000, 10000000, 10000000, 10000000, 10000000, 10000000, 10000000], total: 120000000 },
+        { name: "PT. Sinar Berkah Abadi", category: "CSR Perusahaan", monthly: [0, 0, 0, 0, 0, 0, 0, 75000000, 0, 0, 0, 0], total: 75000000 },
+        { name: "Hamba Allah (007)", category: "Infaq Jumat", monthly: [4000000, 4200000, 4500000, 3800000, 5000000, 4000000, 4100000, 4300000, 4500000, 4000000, 4800000, 4800000], total: 52000000 },
+        { name: "Hj. Siti Aminah", category: "Donatur Tetap", monthly: [3000000, 3000000, 3000000, 3000000, 3000000, 3000000, 3000000, 3000000, 3000000, 3000000, 3000000, 3000000], total: 36000000 },
+        { name: "Keluarga Bpk. Rahmat", category: "Wakaf Tunai", monthly: [0, 0, 0, 0, 25000000, 0, 0, 0, 0, 0, 0, 0], total: 25000000 },
+      ]
+    },
+    chartData: {
+      weekly: [
+        { period: 'M1 Des', income: 20000000, expense: 18000000, group: 'Desember 2025' },
+        { period: 'M2 Des', income: 22000000, expense: 20000000, group: 'Desember 2025' },
+        { period: 'M3 Des', income: 25000000, expense: 22000000, group: 'Desember 2025' },
+        { period: 'M4 Des', income: 40000000, expense: 35000000, group: 'Desember 2025' },
+        { period: 'M1 Jan', income: 25000000, expense: 20000000, group: 'Januari 2026' },
+        { period: 'M2 Jan', income: 30000000, expense: 22000000, group: 'Januari 2026' },
+        { period: 'M3 Jan', income: 28000000, expense: 25000000, group: 'Januari 2026' },
+        { period: 'M4 Jan', income: 42000000, expense: 33000000, group: 'Januari 2026' },
+      ],
+      monthly: [
+        { period: 'Jul', income: 90000000, expense: 85000000, group: 'Semester 2 2025' },
+        { period: 'Agu', income: 98000000, expense: 90000000, group: 'Semester 2 2025' },
+        { period: 'Sep', income: 110000000, expense: 95000000, group: 'Semester 2 2025' },
+        { period: 'Okt', income: 105000000, expense: 88000000, group: 'Semester 2 2025' },
+        { period: 'Nov', income: 130000000, expense: 100000000, group: 'Semester 2 2025' },
+        { period: 'Des', income: 150000000, expense: 110000000, group: 'Semester 2 2025' },
+        { period: 'Jan', income: 125000000, expense: 100000000, group: 'Semester 1 2026' },
+      ],
+      yearly: [
+        { period: '2023', income: 1200000000, expense: 1100000000, group: 'Tahunan' },
+        { period: '2024', income: 1450000000, expense: 1300000000, group: 'Tahunan' },
+        { period: '2025', income: 1600000000, expense: 1450000000, group: 'Tahunan' },
+      ]
+    },
+    expensesByFunction: [
+      { name: 'Program (Ibadah/Sosial)', value: 75000000, color: '#10B981' },
+      { name: 'Manajemen & Umum', value: 15000000, color: '#64748B' },
+      { name: 'Fundraising', value: 10000000, color: '#F59E0B' },
+    ],
+    calk: [
+      { title: "Renovasi Kubah", description: "Penggunaan Dana Terikat sebesar Rp 50jt untuk perbaikan kebocoran kubah utama.", date: "10 Jan 2026" },
+      { title: "Santunan Yatim", description: "Distribusi bulanan rutin kepada 50 anak yatim binaan.", date: "05 Jan 2026" },
+    ]
+  },
+  {
+    id: 2,
+    name: "Masjid Istiqomah",
+    location: "Bandung, Jawa Barat",
+    verified: true,
+    lastUpdated: "16 Jan 2026",
+    assets: {
+      unrestricted: 120000000,
+      restricted: 45000000,
+      liabilities: 0,
+    },
+    currentPeriod: {
+      openingBalance: 40000000,
+      surplus: -5000000,
+      incomeTotal: 45000000,
+      expenseTotal: 50000000,
+      closingBalance: 35000000,
+    },
+    cashBreakdown: [
+      { type: 'bank', name: 'Bank BJB Syariah', number: '0019283746', balance: 30000000, color: 'bg-blue-100 text-blue-700' },
+      { type: 'cash', name: 'Kas Tunai', number: '-', balance: 5000000, color: 'bg-orange-100 text-orange-700' },
+    ],
+    restrictedProjects: [
+      { name: "Renovasi Toilet", collected: 20000000, target: 50000000, percent: 40 },
+    ],
+    donorsByYear: {
+      '2026': [
+        { name: "Hamba Allah (102)", category: "Infaq Jumat", monthly: [1500000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 1500000 },
+        { name: "Bpk. Budi Santoso", category: "Donatur Tetap", monthly: [1000000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 1000000 },
+      ],
+      '2025': [
+        { name: "Hamba Allah (102)", category: "Infaq Jumat", monthly: [1000000, 1000000, 1000000, 1500000, 1000000, 1000000, 1000000, 1500000, 1000000, 1000000, 2000000, 2000000], total: 15000000 },
+        { name: "Bpk. Budi Santoso", category: "Donatur Tetap", monthly: [1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000], total: 12000000 },
+        { name: "CV. Makmur Jaya", category: "CSR", monthly: [0, 0, 0, 0, 0, 0, 0, 0, 0, 10000000, 0, 0], total: 10000000 },
+      ]
+    },
+    chartData: {
+      weekly: [
+        { period: 'M1 Jan', income: 10000000, expense: 12000000, group: 'Januari 2026' },
+        { period: 'M2 Jan', income: 12000000, expense: 11000000, group: 'Januari 2026' },
+        { period: 'M3 Jan', income: 11000000, expense: 14000000, group: 'Januari 2026' },
+        { period: 'M4 Jan', income: 12000000, expense: 13000000, group: 'Januari 2026' },
+      ],
+      monthly: [
+        { period: 'Des', income: 60000000, expense: 55000000, group: 'Semester 2 2025' },
+        { period: 'Jan', income: 45000000, expense: 50000000, group: 'Semester 1 2026' },
+      ],
+      yearly: [
+        { period: '2024', income: 500000000, expense: 480000000, group: 'Tahunan' },
+        { period: '2025', income: 600000000, expense: 580000000, group: 'Tahunan' },
+      ]
+    },
+    expensesByFunction: [
+      { name: 'Program Services', value: 40000000, color: '#10B981' },
+      { name: 'Management', value: 10000000, color: '#64748B' },
+    ],
+    calk: [
+      { title: "Defisit Operasional", description: "Peningkatan biaya listrik dikarenakan penambahan AC baru.", date: "15 Jan 2026" }
+    ]
+  }
+];
+
+// Helper to format currency (IDR)
+const formatIDR = (amount) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
+// Compact formatter for table cells
+const formatCompactIDR = (amount) => {
+  if (amount === 0) return "-";
+  if (amount >= 1000000000) return (amount / 1000000000).toFixed(1) + "M";
+  if (amount >= 1000000) return (amount / 1000000).toFixed(1) + "jt";
+  return (amount / 1000).toFixed(0) + "rb";
+};
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+const App = () => {
+  const [view, setView] = useState('home');
+  const [selectedMosque, setSelectedMosque] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredMosques = useMemo(() => {
+    if (!searchQuery) return [];
+    return MOSQUES_DB.filter(m => 
+      m.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      m.location.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
+
+  const handleSelectMosque = (mosque) => {
+    setSelectedMosque(mosque);
+    setView('dashboard');
+  };
+
+  const handleBack = () => {
+    setView('home');
+    setSearchQuery('');
+    setSelectedMosque(null);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
+      {/* Navbar */}
+      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={handleBack}>
+            <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
+              <Building2 className="text-white w-5 h-5" />
+            </div>
+            <span className="font-bold text-xl tracking-tight text-slate-900">Amanah<span className="text-emerald-600">Public</span></span>
+          </div>
+          <div className="text-sm text-slate-500 hidden sm:block">
+            Standar Pelaporan ISAK 35
+          </div>
+        </div>
+      </nav>
+
+      <main>
+        {view === 'home' ? (
+          <HomeView 
+            searchQuery={searchQuery} 
+            setSearchQuery={setSearchQuery} 
+            filteredMosques={filteredMosques}
+            onSelect={handleSelectMosque}
+          />
+        ) : (
+          <DashboardView 
+            data={selectedMosque} 
+            onBack={handleBack} 
+          />
+        )}
+      </main>
+    </div>
+  );
+};
+
+const HomeView = ({ searchQuery, setSearchQuery, filteredMosques, onSelect }) => {
+  return (
+    <div className="flex flex-col items-center justify-center pt-20 px-4">
+      <div className="text-center max-w-2xl mb-12">
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-6">
+          Transparansi untuk <span className="text-emerald-600">Umat</span>
+        </h1>
+        <p className="text-lg text-slate-600">
+          Akses laporan keuangan masjid Anda secara real-time sesuai standar ISAK 35. 
+          Pantau donasi, dana operasional, dan bangun kepercayaan.
+        </p>
+      </div>
+
+      <div className="w-full max-w-xl relative">
+        <div className="relative group">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
+          </div>
+          <input
+            type="text"
+            className="block w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-lg"
+            placeholder="Cari masjid berdasarkan nama atau kota..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        {searchQuery && (
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-10">
+            {filteredMosques.length > 0 ? (
+              filteredMosques.map((mosque) => (
+                <div 
+                  key={mosque.id}
+                  onClick={() => onSelect(mosque)}
+                  className="p-4 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors flex justify-between items-center"
+                >
+                  <div>
+                    <div className="font-semibold text-slate-900 flex items-center gap-2">
+                      {mosque.name}
+                      {mosque.verified && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                    </div>
+                    <div className="text-sm text-slate-500">{mosque.location}</div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-slate-300" />
+                </div>
+              ))
+            ) : (
+              <div className="p-4 text-center text-slate-500">Masjid tidak ditemukan.</div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {!searchQuery && (
+        <div className="mt-12 flex flex-wrap justify-center gap-4">
+          <button onClick={() => onSelect(MOSQUES_DB[0])} className="px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-600 hover:border-emerald-500 hover:text-emerald-600 transition-all shadow-sm">
+            Contoh: Masjid Raya Al-Falah
+          </button>
+          <button onClick={() => onSelect(MOSQUES_DB[1])} className="px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-600 hover:border-emerald-500 hover:text-emerald-600 transition-all shadow-sm">
+            Contoh: Masjid Istiqomah
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- COMPONENT: STAT CARD ---
+const StatCard = ({ title, subtitle, amount, icon: Icon, colorClass, footer }) => (
+  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between h-full">
+    <div className={`absolute top-0 right-0 p-4 opacity-10 ${colorClass}`}>
+      <Icon className="w-20 h-20" />
+    </div>
+    <div>
+      <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">{title}</h3>
+      {subtitle && <p className="text-xs text-slate-400 mb-3">{subtitle}</p>}
+      <div className={`text-2xl font-bold text-slate-900`}>
+        {amount}
+      </div>
+    </div>
+    {footer && <div className="mt-4">{footer}</div>}
+  </div>
+);
+
+// --- COMPONENT: DASHBOARD VIEW ---
+const DashboardView = ({ data, onBack }) => {
+  // Chart Logic State
+  const [chartPeriod, setChartPeriod] = useState('monthly'); 
+  const [vizType, setVizType] = useState('chart'); 
+  const [donorYear, setDonorYear] = useState('2025'); 
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  // Configuration for pagination
+  const PAGE_SIZE = {
+    weekly: 4,
+    monthly: 6,
+    yearly: 5 
+  };
+
+  const [startIndex, setStartIndex] = useState(0);
+
+  useEffect(() => {
+    const totalDataLength = data.chartData[chartPeriod].length;
+    const size = PAGE_SIZE[chartPeriod];
+    setStartIndex(Math.max(0, totalDataLength - size));
+  }, [chartPeriod, data]);
+
+  const fullData = data.chartData[chartPeriod];
+  const size = PAGE_SIZE[chartPeriod];
+  const visibleData = fullData.slice(startIndex, startIndex + size);
+  
+  const periodTotals = useMemo(() => {
+    return visibleData.reduce((acc, curr) => ({
+      income: acc.income + curr.income,
+      expense: acc.expense + curr.expense
+    }), { income: 0, expense: 0 });
+  }, [visibleData]);
+
+  const currentGroupLabel = visibleData.length > 0 ? visibleData[visibleData.length - 1].group : '-';
+
+  const handlePrevPeriod = () => {
+    setStartIndex((prev) => Math.max(0, prev - size));
+  };
+
+  const handleNextPeriod = () => {
+    const totalDataLength = fullData.length;
+    setStartIndex((prev) => Math.min(totalDataLength - size, prev + size));
+  };
+
+  const isPrevDisabled = startIndex === 0;
+  const isNextDisabled = startIndex + size >= fullData.length;
+
+  // Donor Data Logic based on Year
+  const currentDonors = data.donorsByYear[donorYear] || [];
+
+  // --- DOWNLOAD HANDLERS ---
+  const handleDownloadPDF = () => {
+    setIsDownloading(true);
+    // Simulate API delay
+    setTimeout(() => {
+      setIsDownloading(false);
+      alert("Laporan PDF Standar ISAK 35 berhasil dibuat!\n\n(Catatan: Dalam lingkungan ini, file PDF source code (.tex) telah disediakan di panel sebelah).");
+    }, 2000);
+  };
+
+  const handleDownloadData = () => {
+    // Generate CSV Content from current donors
+    const headers = ["Nama", "Kategori", "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des", "Total"];
+    const rows = currentDonors.map(d => [
+      d.name,
+      d.category,
+      ...d.monthly,
+      d.total
+    ].join(","));
+    
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `Data_Donatur_${data.name.replace(/\s+/g, '_')}_${donorYear}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+          <button onClick={onBack} className="group flex items-center text-sm text-slate-500 hover:text-emerald-600 mb-2 transition-colors">
+            <ChevronLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
+            Kembali
+          </button>
+          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
+            {data.name}
+            {data.verified && <CheckCircle2 className="w-6 h-6 text-emerald-500" />}
+          </h1>
+          <p className="text-slate-500 flex items-center gap-2 mt-1">
+            <Building2 className="w-4 h-4" /> {data.location} 
+            <span className="text-slate-300">|</span> 
+            <span className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-600">Update Terakhir: {data.lastUpdated}</span>
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <button 
+            onClick={handleDownloadPDF}
+            disabled={isDownloading}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm disabled:opacity-70 disabled:cursor-wait"
+          >
+            {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+            {isDownloading ? "Memproses PDF..." : "Laporan PDF"}
+          </button>
+          <button 
+            onClick={handleDownloadData}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 shadow-sm shadow-emerald-200"
+          >
+            <Download className="w-4 h-4" />
+            Unduh Data (CSV)
+          </button>
+        </div>
+      </div>
+
+      {/* ROW 1: 4 Main Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard 
+          title="Surplus / Defisit"
+          subtitle="(Kinerja Periode Ini)"
+          amount={`${data.currentPeriod.surplus >= 0 ? '+' : ''}${formatIDR(data.currentPeriod.surplus)}`}
+          icon={TrendingUp}
+          colorClass={data.currentPeriod.surplus >= 0 ? "text-emerald-600" : "text-red-600"}
+          footer={
+             <div className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-1 rounded w-fit">
+               Netto Bulan Ini
+             </div>
+          }
+        />
+        <StatCard 
+          title="Dana Terikat"
+          subtitle="(Wakaf / Proyek Khusus)"
+          amount={formatIDR(data.assets.restricted)}
+          icon={Target}
+          colorClass="text-blue-600"
+          footer={
+            <div className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded w-fit">
+              Dibatasi Pemberi
+            </div>
+          }
+        />
+        <StatCard 
+          title="Dana Tidak Terikat"
+          subtitle="(Operasional Masjid)"
+          amount={formatIDR(data.assets.unrestricted)}
+          icon={Wallet}
+          colorClass="text-emerald-600"
+          footer={
+            <div className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-1 rounded w-fit">
+              Bebas Digunakan
+            </div>
+          }
+        />
+        <StatCard 
+          title="Total Pengeluaran"
+          subtitle="(Periode Berjalan)"
+          amount={formatIDR(data.currentPeriod.expenseTotal)}
+          icon={TrendingDown}
+          colorClass="text-orange-500"
+          footer={
+            <div className="text-xs font-medium text-orange-700 bg-orange-50 px-2 py-1 rounded w-fit">
+              Realisasi Anggaran
+            </div>
+          }
+        />
+      </div>
+
+      {/* ROW 1.5: REKAP KAS & BANK (New Feature) */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6">
+        <div className="flex items-center justify-between mb-4">
+           <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-50 rounded-lg">
+                <Landmark className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900">Rekapitulasi Kas & Bank</h3>
+                <p className="text-xs text-slate-500">Posisi saldo riil per hari ini</p>
+              </div>
+           </div>
+           <div className="text-right">
+             <span className="text-xs text-slate-400 block mb-0.5">Total Kas & Setara Kas</span>
+             <span className="text-xl font-bold text-slate-900">{formatIDR(data.currentPeriod.closingBalance)}</span>
+           </div>
+        </div>
+
+        {/* Cash Flow Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+             <span className="text-xs text-slate-500 block">Saldo Awal</span>
+             <span className="font-semibold text-slate-700">{formatIDR(data.currentPeriod.openingBalance)}</span>
+          </div>
+          <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100 relative">
+             <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-white rounded-full p-0.5 border border-slate-200 hidden md:block">
+               <TrendingUp className="w-3 h-3 text-emerald-500" />
+             </div>
+             <span className="text-xs text-emerald-600 block">Total Pemasukan (+)</span>
+             <span className="font-semibold text-emerald-700">{formatIDR(data.currentPeriod.incomeTotal)}</span>
+          </div>
+          <div className="bg-red-50 p-3 rounded-lg border border-red-100 relative">
+             <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-white rounded-full p-0.5 border border-slate-200 hidden md:block">
+               <TrendingDown className="w-3 h-3 text-red-500" />
+             </div>
+             <span className="text-xs text-red-600 block">Total Pengeluaran (-)</span>
+             <span className="font-semibold text-red-700">{formatIDR(data.currentPeriod.expenseTotal)}</span>
+          </div>
+          <div className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-white relative shadow-md">
+             <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-white rounded-full p-0.5 border border-slate-200 hidden md:block">
+               <ArrowRight className="w-3 h-3 text-slate-800" />
+             </div>
+             <span className="text-xs text-slate-300 block">Saldo Akhir (=)</span>
+             <span className="font-semibold">{formatIDR(data.currentPeriod.closingBalance)}</span>
+          </div>
+        </div>
+        
+        {/* Account Breakdown */}
+        <div className="space-y-3">
+          <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Rincian Penempatan Dana</h4>
+          {data.cashBreakdown && data.cashBreakdown.map((account, idx) => (
+            <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors gap-3">
+              <div className="flex items-center gap-3">
+                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${account.color}`}>
+                   {account.type === 'bank' ? <CreditCard className="w-5 h-5" /> : <Wallet className="w-5 h-5" />}
+                 </div>
+                 <div>
+                   <div className="font-semibold text-slate-800">{account.name}</div>
+                   <div className="text-xs text-slate-500 flex items-center gap-1 font-mono">
+                      {account.number}
+                      {account.type === 'bank' && <span className="bg-slate-100 text-[10px] px-1 rounded text-slate-400">Salin</span>}
+                   </div>
+                 </div>
+              </div>
+              <div className="text-right pl-12 sm:pl-0">
+                 <div className="font-bold text-slate-900">{formatIDR(account.balance)}</div>
+                 <div className="text-[10px] text-slate-400">Available</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ROW 2: Monitoring Dana Terikat */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-blue-50 rounded-lg">
+            <Target className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900">Monitoring Dana Terikat (Wakaf & Donasi Khusus)</h3>
+            <p className="text-xs text-slate-500">Pelacakan progres pengumpulan dana untuk program spesifik.</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {data.restrictedProjects.map((project, idx) => (
+            <div key={idx} className="border border-slate-100 rounded-xl p-4 bg-slate-50/50">
+              <div className="flex justify-between items-start mb-2">
+                <span className="font-semibold text-slate-800 text-sm">{project.name}</span>
+                <span className="text-xs font-bold bg-white border border-slate-200 px-2 py-1 rounded text-blue-600">
+                  {project.percent}%
+                </span>
+              </div>
+              <div className="w-full bg-slate-200 rounded-full h-2.5 mb-3">
+                <div 
+                  className="bg-blue-600 h-2.5 rounded-full" 
+                  style={{ width: `${project.percent}%` }}
+                ></div>
+              </div>
+              <div className="flex justify-between text-xs text-slate-500">
+                <span>Terkumpul: <span className="text-slate-900 font-medium">{formatIDR(project.collected)}</span></span>
+                <span>Target: {formatIDR(project.target)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ROW 3: Grafik & Tabel Arus Kas */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+          <div>
+            <h3 className="font-bold text-slate-900 text-lg">Analisis Arus Kas</h3>
+            <p className="text-sm text-slate-500">Monitoring historis pemasukan & pengeluaran</p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-3 items-center">
+            <div className="flex bg-slate-100 p-1 rounded-lg">
+              {['weekly', 'monthly', 'yearly'].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setChartPeriod(p)}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    chartPeriod === p 
+                    ? 'bg-white text-emerald-600 shadow-sm' 
+                    : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  {p === 'weekly' ? 'Mingguan' : p === 'monthly' ? 'Bulanan' : 'Tahunan'}
+                </button>
+              ))}
+            </div>
+
+            <div className="hidden sm:block w-px h-8 bg-slate-200 mx-1"></div>
+
+             <div className="flex bg-slate-100 p-1 rounded-lg">
+                <button
+                  onClick={() => setVizType('chart')}
+                  className={`p-1.5 rounded-md transition-all flex items-center gap-1 text-sm ${
+                    vizType === 'chart' 
+                    ? 'bg-white text-emerald-600 shadow-sm font-medium' 
+                    : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Grafik</span>
+                </button>
+                <button
+                  onClick={() => setVizType('table')}
+                  className={`p-1.5 rounded-md transition-all flex items-center gap-1 text-sm ${
+                    vizType === 'table' 
+                    ? 'bg-white text-emerald-600 shadow-sm font-medium' 
+                    : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <TableIcon className="w-4 h-4" />
+                   <span className="hidden sm:inline">Tabel</span>
+                </button>
+            </div>
+
+            {chartPeriod !== 'yearly' && (
+              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 py-1 ml-0 sm:ml-2">
+                <button 
+                  onClick={handlePrevPeriod} 
+                  disabled={isPrevDisabled}
+                  className={`p-1 rounded transition-colors ${isPrevDisabled ? 'text-slate-300 cursor-not-allowed' : 'text-slate-500 hover:bg-slate-50 hover:text-emerald-600'}`}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <span className="text-sm font-medium text-slate-700 min-w-[120px] text-center select-none">
+                  {currentGroupLabel}
+                </span>
+                <button 
+                  onClick={handleNextPeriod} 
+                  disabled={isNextDisabled}
+                  className={`p-1 rounded transition-colors ${isNextDisabled ? 'text-slate-300 cursor-not-allowed' : 'text-slate-500 hover:bg-slate-50 hover:text-emerald-600'}`}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-6 mb-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
+           <div>
+             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1">Total Pemasukan ({currentGroupLabel})</span>
+             <span className="text-lg font-bold text-emerald-600">{formatIDR(periodTotals.income)}</span>
+           </div>
+           <div className="w-px bg-slate-200"></div>
+           <div>
+             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1">Total Pengeluaran ({currentGroupLabel})</span>
+             <span className="text-lg font-bold text-slate-700">{formatIDR(periodTotals.expense)}</span>
+           </div>
+        </div>
+
+        <div className="h-72 w-full">
+          {vizType === 'chart' ? (
+             <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={visibleData} margin={{ top: 10, right: 10, left: 20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="period" axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 12}} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => `${value / 1000000}jt`} tick={{fill: '#64748B', fontSize: 12}} />
+                <RechartsTooltip 
+                  formatter={(value) => formatIDR(value)}
+                  cursor={{fill: '#f1f5f9'}}
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+                <Legend verticalAlign="top" height={36} iconType="circle" />
+                <Bar name="Pemasukan" dataKey="income" fill="#10B981" radius={[4, 4, 0, 0]} barSize={chartPeriod === 'yearly' ? 40 : 20} />
+                <Bar name="Pengeluaran" dataKey="expense" fill="#1e293b" radius={[4, 4, 0, 0]} barSize={chartPeriod === 'yearly' ? 40 : 20} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-full overflow-y-auto pr-2 border border-slate-100 rounded-lg">
+               <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-slate-500 uppercase bg-slate-50 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">Periode</th>
+                      <th className="px-4 py-3 text-right font-semibold">Pemasukan</th>
+                      <th className="px-4 py-3 text-right font-semibold">Pengeluaran</th>
+                      <th className="px-4 py-3 text-right font-semibold">Surplus/Defisit</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {visibleData.map((item, index) => {
+                      const net = item.income - item.expense;
+                      return (
+                        <tr key={index} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="px-4 py-3 font-medium text-slate-900">
+                            {item.period}
+                            {chartPeriod !== 'yearly' && <span className="block text-[10px] text-slate-400 font-normal">{item.group}</span>}
+                          </td>
+                          <td className="px-4 py-3 text-right text-emerald-600 font-medium">{formatIDR(item.income)}</td>
+                          <td className="px-4 py-3 text-right text-slate-700 font-medium">{formatIDR(item.expense)}</td>
+                          <td className={`px-4 py-3 text-right font-bold ${net >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {net >= 0 ? '+' : ''}{formatIDR(net)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+               </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ROW 4: Donatur Tetap (UPDATED MONTHLY TABLE) */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-pink-50 rounded-lg">
+              <Heart className="w-5 h-5 text-pink-500" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900">Donatur Tetap & Muhsinin</h3>
+              <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                <Calendar className="w-3 h-3 text-emerald-500" />
+                Matriks Donasi Bulanan ({donorYear})
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-slate-500 hidden sm:block">Tahun Fiskal:</span>
+            <select 
+              value={donorYear}
+              onChange={(e) => setDonorYear(e.target.value)}
+              className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2 shadow-sm outline-none cursor-pointer hover:bg-slate-100 transition-colors"
+            >
+              <option value="2026">2026 (Berjalan)</option>
+              <option value="2025">2025 (Arsip)</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="border border-slate-200 rounded-xl overflow-hidden relative">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left whitespace-nowrap">
+                <thead className="text-xs text-slate-500 uppercase bg-slate-50">
+                    <tr>
+                        <th className="px-4 py-3 sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">Nama Donatur</th>
+                        <th className="px-4 py-3 border-l border-slate-200">Kategori</th>
+                        {MONTH_NAMES.map((month) => (
+                           <th key={month} className="px-3 py-3 text-center border-l border-slate-100 min-w-[80px]">{month}</th>
+                        ))}
+                        <th className="px-4 py-3 text-right bg-emerald-50/50 border-l border-emerald-100 text-emerald-700">Total</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                    {currentDonors.length > 0 ? (
+                      currentDonors.map((donor, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-4 py-3 font-medium text-slate-900 flex items-center gap-2 sticky left-0 bg-white z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                                <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-[10px] font-bold shrink-0">
+                                    {donor.name.charAt(0)}
+                                </div>
+                                <span className="truncate max-w-[150px]" title={donor.name}>{donor.name}</span>
+                            </td>
+                            <td className="px-4 py-3 text-slate-500 border-l border-slate-100 text-xs">{donor.category}</td>
+                            
+                            {/* Monthly Data Columns */}
+                            {donor.monthly && donor.monthly.map((amount, mIdx) => (
+                              <td key={mIdx} className="px-3 py-3 text-center border-l border-slate-50 text-slate-600 text-xs">
+                                {amount > 0 ? (
+                                  <span className="font-medium">{formatCompactIDR(amount)}</span>
+                                ) : (
+                                  <span className="text-slate-300">-</span>
+                                )}
+                              </td>
+                            ))}
+
+                            <td className="px-4 py-3 text-right font-bold text-emerald-600 bg-emerald-50/30 border-l border-emerald-100">
+                                {formatCompactIDR(donor.total)}
+                            </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="15" className="px-4 py-8 text-center text-slate-400 italic">
+                          Belum ada data donatur tercatat untuk tahun {donorYear}
+                        </td>
+                      </tr>
+                    )}
+                </tbody>
+            </table>
+          </div>
+        </div>
+        <p className="text-[10px] text-slate-400 mt-2 italic">* Geser tabel ke kanan untuk melihat bulan lainnya.</p>
+      </div>
+
+      {/* ROW 5: Rincian Pengeluaran & Liabilitas */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* Rincian Pengeluaran (Pie Chart) */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 className="font-bold text-slate-900 mb-2">Rincian Pengeluaran</h3>
+          <p className="text-xs text-slate-500 mb-6">Distribusi dana untuk Program vs Manajemen</p>
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            <div className="h-48 w-48 relative flex-shrink-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <RePieChart>
+                  <Pie
+                    data={data.expensesByFunction}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={70}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {data.expensesByFunction.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip formatter={(value) => formatIDR(value)} />
+                </RePieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span className="text-xl font-bold text-slate-800">100%</span>
+              </div>
+            </div>
+            <div className="w-full space-y-3">
+               {data.expensesByFunction.map((entry, index) => (
+                 <div key={index} className="flex justify-between items-center text-sm border-b border-slate-50 pb-2 last:border-0">
+                   <div className="flex items-center gap-2">
+                     <div className="w-3 h-3 rounded-full flex-shrink-0" style={{backgroundColor: entry.color}}></div>
+                     <span className="text-slate-600">{entry.name}</span>
+                   </div>
+                   <span className="font-semibold text-slate-900">{formatIDR(entry.value)}</span>
+                 </div>
+               ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Liabilitas & Catatan Singkat */}
+        <div className="flex flex-col gap-6">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex-1">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-red-50 rounded-lg">
+                  <CreditCard className="w-5 h-5 text-red-500" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900">Liabilitas / Kewajiban</h3>
+                  <p className="text-xs text-slate-500">Utang jangka pendek & panjang</p>
+                </div>
+              </div>
+              
+              <div className="bg-slate-50 rounded-xl p-4 flex justify-between items-center mb-4 border border-slate-100">
+                <span className="text-slate-600 font-medium">Total Terutang</span>
+                <span className="text-xl font-bold text-red-600">{formatIDR(data.assets.liabilities)}</span>
+              </div>
+              <p className="text-xs text-slate-500">
+                Liabilitas saat ini terdiri dari tagihan operasional bulan berjalan yang belum jatuh tempo.
+              </p>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex-1">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                  <Info className="w-4 h-4 text-blue-500" /> CALK Terbaru
+                </h3>
+                <span className="text-xs text-emerald-600 cursor-pointer hover:underline">Lihat Semua</span>
+              </div>
+              <div className="space-y-3">
+                {data.calk.map((note, idx) => (
+                  <div key={idx} className="text-sm pb-2 border-b border-slate-50 last:border-0 last:pb-0">
+                    <div className="flex justify-between">
+                       <span className="font-medium text-slate-800">{note.title}</span>
+                       <span className="text-xs text-slate-400">{note.date}</span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-1">{note.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+export default App;

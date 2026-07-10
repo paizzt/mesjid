@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: sim_masjid_app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DB_HOST=db
+      - DB_USER=sim_user
+      - DB_PASSWORD=sim_password
+      - DB_NAME=sim_masjid
+      - DB_PORT=5432
+      - JWT_SECRET=super_secret_jwt_key_for_sim_masjid_dkm
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - sim_network
+
+  db:
+    image: postgres:15-alpine
+    container_name: sim_masjid_db
+    restart: always
+    environment:
+      - POSTGRES_USER=sim_user
+      - POSTGRES_PASSWORD=sim_password
+      - POSTGRES_DB=sim_masjid
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sim_user -d sim_masjid"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sim_network
+
+networks:
+  sim_network:
+    driver: bridge
+
+volumes:
+  db_data:

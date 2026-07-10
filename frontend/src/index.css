@@ -1,0 +1,87 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+
+@layer components {
+  /* Modern styling for all native select elements */
+  select {
+    @apply appearance-none bg-white border border-slate-300 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 block w-full px-4 py-2.5 shadow-sm transition-all duration-300 hover:border-emerald-400 hover:shadow-md cursor-pointer outline-none font-medium;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25em 1.25em;
+  }
+  
+  /* Styling for dropdown options (works partially on some browsers) */
+  select option {
+    @apply py-2 px-4 text-slate-700 bg-white;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full hover:bg-slate-400 transition-colors;
+}
+
+/* Khusus scrollbar di area gelap (seperti sidebar) */
+aside ::-webkit-scrollbar-thumb {
+  @apply bg-slate-700 hover:bg-slate-600;
+}
+
+
+
+/* Print Styles - Hanya cetak konten laporan */
+@media print {
+  /* Sembunyikan semua elemen kecuali laporan */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Tampilkan hanya konten printable */
+  #printable-report,
+  #printable-report * {
+    visibility: visible;
+  }
+  
+  /* Posisikan laporan di kiri atas halaman */
+  #printable-report {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+  }
+  
+  /* Sembunyikan sidebar, header, footer, dll */
+  nav,
+  aside,
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+  
+  /* Reset ukuran halaman untuk print */
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+  
+  /* Hindari page break di tengah tabel */
+  table {
+    page-break-inside: avoid;
+  }
+  
+  tr {
+    page-break-inside: avoid;
+  }
+}

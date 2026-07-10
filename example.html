@@ -1,0 +1,1255 @@
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { initializeApp } from 'firebase/app';
+import { 
+  getAuth, 
+  signInAnonymously, 
+  onAuthStateChanged,
+  signInWithCustomToken
+} from 'firebase/auth';
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  onSnapshot, 
+  query, 
+  orderBy, 
+  Timestamp, 
+  deleteDoc, 
+  doc,
+  writeBatch 
+} from 'firebase/firestore';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer, 
+  PieChart, 
+  Pie, 
+  Cell,
+  BarChart,
+  Bar,
+  AreaChart,
+  Area
+} from 'recharts';
+import { 
+  Wallet, 
+  TrendingUp, 
+  TrendingDown, 
+  FileText, 
+  PlusCircle, 
+  MinusCircle, 
+  History, 
+  Landmark, 
+  AlertCircle,
+  Menu,
+  X,
+  PieChart as PieIcon,
+  Download,
+  Calendar,
+  Eye,
+  Table as TableIcon,
+  Database,
+  CheckCircle2,
+  AlertTriangle,
+  Loader2,
+  Filter,
+  Briefcase,
+  HeartHandshake,
+  Scale,
+  ChevronRight,
+  ChevronLeft,
+  Info,
+  Coins,
+  Layers,
+  Tag,
+  List,
+  ArrowRightLeft,
+  Package,
+  Box,
+  Trash2,
+  Users,
+  Monitor,
+  Maximize2,
+  Minimize2,
+  CalendarDays,
+  FileSpreadsheet,
+  Printer,
+  FileDown,
+  HelpCircle,
+  Search,
+  MapPin,
+  ShieldCheck,
+  Globe,
+  QrCode,
+  BookOpen,
+  EyeOff,
+  Settings
+} from 'lucide-react';
+
+// --- Firebase Configuration & Initialization ---
+const firebaseConfig = JSON.parse(__firebase_config);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-mosque-app';
+
+// --- Constants & Types ---
+const COLORS = {
+  primary: '#10B981', 
+  secondary: '#3B82F6',
+  accent: '#F59E0B', 
+  danger: '#EF4444', 
+  dark: '#1F2937',
+  light: '#F3F4F6',
+  program: '#8B5CF6', 
+  management: '#64748B' 
+};
+
+const CATEGORIES = {
+  income: [
+    'Infaq Jumat (Kotak Amal)',
+    'Zakat Maal',
+    'Zakat Fitrah',
+    'Waqaf Tunai',
+    'Donasi Pembangunan',
+    'Donasi Anak Yatim',
+    'Sponsorship',
+    'Penerimaan Pinjaman (Utang)',
+    'Lainnya'
+  ],
+  expense: [
+    'Operasional Masjid (Listrik/Air)',
+    'Honor Imam/Marbot',
+    'Pembangunan & Renovasi',
+    'Penyaluran Zakat',
+    'Santunan Yatim/Dhuafa',
+    'Kegiatan Dakwah',
+    'Perlengkapan Kebersihan',
+    'Pemeliharaan Aset',
+    'Pelunasan Utang',
+    'Lainnya'
+  ]
+};
+
+const INVENTORY_CATEGORIES = [
+  'Perlengkapan Ibadah',
+  'Elektronik & Audio',
+  'Perabot & Furniture',
+  'Peralatan Kebersihan',
+  'Inventaris Kantor',
+  'Lainnya'
+];
+
+const EXPENSE_FUNCTIONS = {
+  program: ['Pembangunan & Renovasi', 'Penyaluran Zakat', 'Santunan Yatim/Dhuafa', 'Kegiatan Dakwah'],
+  management: ['Operasional Masjid (Listrik/Air)', 'Honor Imam/Marbot', 'Perlengkapan Kebersihan', 'Pemeliharaan Aset', 'Lainnya', 'Pelunasan Utang']
+};
+
+const FUND_GROUPS = [
+  { id: 'pembangunan', name: 'Dana Pembangunan', sources: ['Donasi Pembangunan', 'Waqaf Tunai'], usages: ['Pembangunan & Renovasi'] },
+  { id: 'yatim', name: 'Dana Yatim', sources: ['Donasi Anak Yatim'], usages: ['Santunan Yatim/Dhuafa'] },
+  { id: 'zakat', name: 'Dana Zakat', sources: ['Zakat Maal', 'Zakat Fitrah'], usages: ['Penyaluran Zakat'] },
+  { id: 'dakwah', name: 'Dana Dakwah', sources: ['Sponsorship'], usages: ['Kegiatan Dakwah'] }
+];
+
+const MONTH_NAMES = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+const SHORT_MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+
+type TransactionType = 'income' | 'expense';
+type RestrictionType = 'unrestricted' | 'restricted';
+type ChartPeriod = 'weekly' | 'monthly' | 'yearly';
+type ConditionType = 'baik' | 'rusak_ringan' | 'rusak_berat';
+
+interface Transaction {
+  id: string;
+  date: any;
+  amount: number;
+  type: TransactionType;
+  category: string;
+  restriction: RestrictionType;
+  description: string;
+  donorName?: string;
+  isRegularDonor?: boolean;
+  recordedBy?: string;
+}
+
+interface InventoryItem {
+  id: string;
+  name: string;
+  category: string;
+  quantity: number;
+  condition: ConditionType;
+  location: string;
+  acquisitionDate: any;
+  estimatedValue?: number;
+}
+
+// --- Helper Functions ---
+const formatCurrency = (amount: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+const formatDate = (timestamp: any) => {
+  if (!timestamp) return '-';
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+};
+const getWeekNumber = (d: Date) => {
+  const oneJan = new Date(d.getFullYear(), 0, 1);
+  const numberOfDays = Math.floor((d.getTime() - oneJan.getTime()) / (24 * 60 * 60 * 1000));
+  return Math.ceil((d.getDay() + 1 + numberOfDays) / 7);
+};
+const getStartOfWeek = (date: Date) => {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); 
+  return new Date(d.setDate(diff));
+};
+const getEndOfWeek = (date: Date) => {
+  const start = getStartOfWeek(date);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  return end;
+};
+
+// --- Sub-Components ---
+const ToastNotification = ({ toast }: { toast: { message: string, type: 'success' | 'error' | 'info' } | null }) => {
+  if (!toast) return null;
+  const bg = toast.type === 'success' ? 'bg-emerald-600' : toast.type === 'error' ? 'bg-red-600' : 'bg-slate-800';
+  const icon = toast.type === 'success' ? <CheckCircle2 size={18} /> : toast.type === 'error' ? <AlertTriangle size={18} /> : <Loader2 size={18} className="animate-spin" />;
+  return (
+    <div className={`fixed bottom-4 right-4 z-[100] ${bg} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-in slide-in-from-bottom-5 duration-300`}>
+      {icon} <span className="font-medium text-sm">{toast.message}</span>
+    </div>
+  );
+};
+
+const StatCard = ({ title, value, subtext, icon: Icon, colorClass, dark = false }: any) => (
+  <div className={`${dark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'} p-6 rounded-xl shadow-sm border flex items-start space-x-4`}>
+    <div className={`p-3 rounded-lg ${colorClass} text-white`}> <Icon size={24} /> </div>
+    <div>
+      <h3 className={`${dark ? 'text-slate-400' : 'text-slate-500'} text-sm font-medium`}>{title}</h3>
+      <p className={`text-2xl font-bold ${dark ? 'text-white' : 'text-slate-800'} mt-1`}>{typeof value === 'number' ? formatCurrency(value) : value}</p>
+      {subtext && <p className={`${dark ? 'text-slate-500' : 'text-slate-400'} text-xs mt-1`}>{subtext}</p>}
+    </div>
+  </div>
+);
+
+// --- Main Component ---
+export default function MosqueFinanceApp() {
+  const [user, setUser] = useState<any>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'entry' | 'donors' | 'report' | 'recap' | 'inventory' | 'transactions' | 'public_view' | 'public_portal' | 'settings'>('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const printableRef = useRef<HTMLDivElement>(null);
+  
+  // State
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('monthly');
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [viewCategoryDetail, setViewCategoryDetail] = useState<string | null>(null);
+
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedWeekDate, setSelectedWeekDate] = useState(new Date()); 
+  const [donorViewYear, setDonorViewYear] = useState(new Date().getFullYear());
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Report Filter State
+  const [reportPeriod, setReportPeriod] = useState<'weekly' | 'monthly' | 'yearly'>('monthly');
+  const [reportMonth, setReportMonth] = useState(new Date().getMonth());
+  const [reportYear, setReportYear] = useState(new Date().getFullYear());
+  const [reportWeekDate, setReportWeekDate] = useState(new Date());
+  const [reportViewMode, setReportViewMode] = useState<'admin' | 'public'>('admin');
+
+  // Carousel State
+  const [publicSlideIndex, setPublicSlideIndex] = useState(0);
+
+  // Portal State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [portalView, setPortalView] = useState<'search' | 'profile'>('search');
+  const [selectedMosqueName, setSelectedMosqueName] = useState('Masjid Amanah');
+
+  // Settings State
+  const [mosqueProfile, setMosqueProfile] = useState({
+    name: 'Masjid Amanah',
+    address: 'Jl. Merdeka No. 1',
+    city: 'Jakarta Pusat',
+    phone: '0812-3456-7890'
+  });
+
+  // Form States
+  const [amount, setAmount] = useState('');
+  const [type, setType] = useState<TransactionType>('income');
+  const [category, setCategory] = useState(CATEGORIES.income[0]);
+  const [customCategory, setCustomCategory] = useState(''); 
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
+  const [restriction, setRestriction] = useState<RestrictionType>('unrestricted');
+  const [description, setDescription] = useState('');
+  const [donorNameInput, setDonorNameInput] = useState('');
+  const [isRegularDonor, setIsRegularDonor] = useState(false);
+  
+  const [invName, setInvName] = useState('');
+  const [invCategory, setInvCategory] = useState(INVENTORY_CATEGORIES[0]);
+  const [invQty, setInvQty] = useState('');
+  const [invValue, setInvValue] = useState(''); 
+  const [invCondition, setInvCondition] = useState<ConditionType>('baik');
+  const [invLocation, setInvLocation] = useState('');
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [confirmGenerate, setConfirmGenerate] = useState(false);
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  // --- Effects ---
+  useEffect(() => {
+    const initAuth = async () => {
+      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
+      else await signInAnonymously(auth);
+    };
+    initAuth();
+    return onAuthStateChanged(auth, setUser);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'public_view') {
+      const slideTimer = setInterval(() => {
+        setPublicSlideIndex(prev => (prev + 1) % 6); 
+      }, 10000); 
+      return () => clearInterval(slideTimer);
+    } else {
+      setPublicSlideIndex(0);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!user) return;
+    const unsub = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'mosque_transactions'), (snap) => {
+        const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Transaction[];
+        data.sort((a, b) => (b.date?.toDate ? b.date.toDate() : new Date()).getTime() - (a.date?.toDate ? a.date.toDate() : new Date()).getTime());
+        setTransactions(data);
+        setLoading(false);
+    });
+    return () => unsub();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const unsub = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'mosque_inventory'), (snap) => {
+        setInventory(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as InventoryItem[]);
+    });
+    return () => unsub();
+  }, [user]);
+
+  // --- Calculations ---
+  const fundBalances = useMemo(() => {
+    const balances: Record<string, number> = {};
+    let otherRestrictedBalance = 0;
+    const otherBreakdown: Record<string, number> = {}; 
+    FUND_GROUPS.forEach(g => balances[g.id] = 0);
+    transactions.forEach(t => {
+      if (t.restriction !== 'restricted') return;
+      let matched = false;
+      FUND_GROUPS.forEach(group => {
+        if (t.type === 'income' && group.sources.includes(t.category)) { balances[group.id] += t.amount; matched = true; }
+        if (t.type === 'expense' && group.usages.includes(t.category)) { balances[group.id] -= t.amount; matched = true; }
+      });
+      if (!matched) {
+        if (!otherBreakdown[t.category]) otherBreakdown[t.category] = 0;
+        if (t.type === 'income') { otherRestrictedBalance += t.amount; otherBreakdown[t.category] += t.amount; }
+        else { otherRestrictedBalance -= t.amount; otherBreakdown[t.category] -= t.amount; }
+      }
+    });
+    return { groups: balances, dynamic: otherBreakdown, other: otherRestrictedBalance };
+  }, [transactions]);
+
+  const currentRestrictedBalance = useMemo(() => {
+    if (type !== 'expense') return 0;
+    const targetCat = isCustomCategory ? customCategory : category;
+    const group = FUND_GROUPS.find(g => g.usages.includes(targetCat));
+    if (group) return fundBalances.groups[group.id] || 0;
+    return fundBalances.dynamic[targetCat] || 0;
+  }, [type, category, customCategory, isCustomCategory, fundBalances]);
+
+  const availableDynamicCategories = useMemo(() => Object.entries(fundBalances.dynamic).filter(([_, b]) => b > 0).map(([n]) => n).sort(), [fundBalances]);
+
+  const stats = useMemo(() => {
+    let totalIncome = 0, totalExpense = 0, netUnrestricted = 0, netRestricted = 0, monthlyIncome = 0, monthlyExpense = 0, weeklyIncome = 0, weeklyExpense = 0;
+    let totalLiabilities = 0;
+    
+    const now = new Date();
+    const currentWeekNum = getWeekNumber(now);
+    const currentYear = now.getFullYear();
+
+    transactions.forEach(t => {
+      if (t.type === 'income') {
+          totalIncome += t.amount;
+          t.restriction === 'restricted' ? netRestricted += t.amount : netUnrestricted += t.amount;
+          if (t.category === 'Penerimaan Pinjaman (Utang)') totalLiabilities += t.amount;
+      } else {
+          totalExpense += t.amount;
+          t.restriction === 'restricted' ? netRestricted -= t.amount : netUnrestricted -= t.amount;
+          if (t.category === 'Pelunasan Utang') totalLiabilities -= t.amount;
+      }
+      
+      const tDate = t.date?.toDate ? t.date.toDate() : new Date();
+      if(tDate.getMonth() === now.getMonth() && tDate.getFullYear() === currentYear) {
+         t.type === 'income' ? monthlyIncome += t.amount : monthlyExpense += t.amount;
+      }
+      if(tDate.getFullYear() === currentYear && getWeekNumber(tDate) === currentWeekNum) {
+        t.type === 'income' ? weeklyIncome += t.amount : weeklyExpense += t.amount;
+      }
+    });
+
+    let filtered = transactions;
+    if (chartPeriod === 'weekly') {
+      filtered = transactions.filter(t => {
+        const d = t.date?.toDate ? t.date.toDate() : new Date();
+        return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+      });
+    }
+
+    const expenseStats = { program: 0, management: 0, total: 0, byCategory: {} as Record<string, number> };
+    const grouped = filtered.reduce((acc, curr) => {
+      const d = curr.date?.toDate ? curr.date.toDate() : new Date();
+      let key = '', label = '', sortKey = 0;
+      if (chartPeriod === 'monthly') { key = `${d.getFullYear()}-${d.getMonth()}`; label = new Intl.DateTimeFormat('id-ID', { month: 'short', year: 'numeric' }).format(d); sortKey = d.getTime(); }
+      else if (chartPeriod === 'yearly') { key = `${d.getFullYear()}`; label = key; sortKey = d.getFullYear(); }
+      else { const week = Math.ceil(d.getDate() / 7); key = `W${week}`; label = `Minggu ${week}`; sortKey = week; }
+
+      if (!acc[key]) acc[key] = { name: label, rawKey: key, sortKey, income: 0, expense: 0 };
+      if (curr.type === 'income') acc[key].income += curr.amount;
+      else {
+        acc[key].expense += curr.amount;
+        expenseStats.total += curr.amount;
+        if(EXPENSE_FUNCTIONS.program.includes(curr.category)) expenseStats.program += curr.amount;
+        else expenseStats.management += curr.amount;
+        expenseStats.byCategory[curr.category] = (expenseStats.byCategory[curr.category] || 0) + curr.amount;
+      }
+      return acc;
+    }, {} as any);
+
+    let chartData = Object.values(grouped).sort((a: any, b: any) => a.sortKey - b.sortKey);
+    if(chartPeriod === 'monthly') chartData = chartData.slice(-6);
+
+    return { 
+      totalAssets: netUnrestricted + netRestricted, 
+      netAssetsUnrestricted: netUnrestricted,
+      netAssetsRestricted: netRestricted, 
+      surplusDeficit: totalIncome - totalExpense, 
+      monthlyIncome, monthlyExpense, 
+      weeklyIncome, weeklyExpense, 
+      chartData, 
+      expenseStats,
+      totalLiabilities
+    };
+  }, [transactions, chartPeriod, selectedMonth, selectedYear]);
+
+  // --- REPORT GENERATION LOGIC ---
+  const reportData = useMemo(() => {
+    let startDate: Date, endDate: Date, title = "";
+
+    if (reportPeriod === 'weekly') {
+      startDate = getStartOfWeek(reportWeekDate);
+      endDate = getEndOfWeek(reportWeekDate);
+      startDate.setHours(0,0,0,0);
+      endDate.setHours(23,59,59,999);
+      title = `Mingguan (${startDate.getDate()} - ${endDate.getDate()} ${MONTH_NAMES[startDate.getMonth()]} ${startDate.getFullYear()})`;
+    } else if (reportPeriod === 'monthly') {
+      startDate = new Date(reportYear, reportMonth, 1);
+      endDate = new Date(reportYear, reportMonth + 1, 0, 23, 59, 59, 999);
+      title = `Bulanan (${MONTH_NAMES[reportMonth]} ${reportYear})`;
+    } else {
+      startDate = new Date(reportYear, 0, 1);
+      endDate = new Date(reportYear, 11, 31, 23, 59, 59, 999);
+      title = `Tahunan (${reportYear})`;
+    }
+
+    let openingUn = 0, openingRes = 0;
+    const periodTransactions = transactions.filter(t => {
+      const d = t.date?.toDate ? t.date.toDate() : new Date();
+      if (d < startDate) {
+        if(t.type === 'income') t.restriction === 'restricted' ? openingRes += t.amount : openingUn += t.amount;
+        else t.restriction === 'restricted' ? openingRes -= t.amount : openingUn -= t.amount;
+        return false;
+      }
+      return d >= startDate && d <= endDate;
+    });
+
+    let incUn = 0, incRes = 0, expUn = 0, expRes = 0;
+    const incDetails: Record<string, {un: number, res: number}> = {};
+    const expDetails: Record<string, {un: number, res: number}> = {};
+
+    periodTransactions.forEach(t => {
+      if (t.type === 'income') {
+        if(t.restriction === 'restricted') incRes += t.amount; else incUn += t.amount;
+        if(!incDetails[t.category]) incDetails[t.category] = {un:0, res:0};
+        t.restriction === 'restricted' ? incDetails[t.category].res += t.amount : incDetails[t.category].un += t.amount;
+      } else {
+        if(t.restriction === 'restricted') expRes += t.amount; else expUn += t.amount;
+        if(!expDetails[t.category]) expDetails[t.category] = {un:0, res:0};
+        t.restriction === 'restricted' ? expDetails[t.category].res += t.amount : expDetails[t.category].un += t.amount;
+      }
+    });
+
+    const surUn = incUn - expUn;
+    const surRes = incRes - expRes;
+
+    const cashFlow = {
+      operatingIn: periodTransactions.filter(t => t.type === 'income').reduce((a, b) => a + b.amount, 0),
+      operatingOut: periodTransactions.filter(t => t.type === 'expense').reduce((a, b) => a + b.amount, 0),
+    };
+
+    return {
+      title, startDate, endDate,
+      opening: { un: openingUn, res: openingRes, total: openingUn + openingRes },
+      current: { 
+        incomeUn: incUn, incomeRes: incRes, 
+        expenseUn: expUn, expenseRes: expRes,
+        incomeDetails: incDetails, expenseDetails: expDetails
+      },
+      surplus: { un: surUn, res: surRes, total: surUn + surRes },
+      closing: { 
+        un: openingUn + surUn, 
+        res: openingRes + surRes, 
+        total: (openingUn + openingRes) + (surUn + surRes) 
+      },
+      cashFlow
+    };
+  }, [transactions, reportPeriod, reportMonth, reportYear, reportWeekDate]);
+
+  const recapData = useMemo(() => {
+    const startOfWeek = getStartOfWeek(selectedWeekDate); const endOfWeek = getEndOfWeek(selectedWeekDate);
+    startOfWeek.setHours(0,0,0,0); endOfWeek.setHours(23,59,59,999);
+    const weekly = transactions.filter(t => { const d = t.date?.toDate ? t.date.toDate() : new Date(); return d >= startOfWeek && d <= endOfWeek; });
+    const monthly = transactions.filter(t => { const d = t.date?.toDate ? t.date.toDate() : new Date(); return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth; });
+    return { weekly, monthly, startOfWeek, endOfWeek };
+  }, [transactions, selectedMonth, selectedYear, selectedWeekDate]);
+
+  const donorStats = useMemo(() => {
+    const donorsMap: Record<string, { total: number, months: number[] }> = {};
+    transactions.forEach(t => {
+      if (t.type === 'income' && t.donorName && t.donorName.trim() !== '' && t.isRegularDonor) {
+        const date = t.date?.toDate ? t.date.toDate() : new Date();
+        const yearToCheck = activeTab === 'public_view' ? new Date().getFullYear() : donorViewYear;
+        if (date.getFullYear() === yearToCheck) {
+           const name = t.donorName.trim();
+           if (!donorsMap[name]) donorsMap[name] = { total: 0, months: Array(12).fill(0) };
+           donorsMap[name].total += t.amount;
+           donorsMap[name].months[date.getMonth()] += t.amount;
+        }
+      }
+    });
+    return Object.entries(donorsMap).map(([name, data]) => ({ name, ...data })).sort((a, b) => b.total - a.total);
+  }, [transactions, donorViewYear, activeTab]);
+
+  const availableYears = useMemo(() => {
+    const years = new Set(transactions.map(t => (t.date?.toDate ? t.date.toDate() : new Date()).getFullYear()));
+    years.add(new Date().getFullYear());
+    return Array.from(years).sort((a, b) => b - a);
+  }, [transactions]);
+  
+  const reportIncomeCategories = useMemo(() => Array.from(new Set([...CATEGORIES.income, ...transactions.filter(t => t.type==='income').map(t=>t.category)])).sort(), [transactions]);
+  const reportExpenseCategories = useMemo(() => Array.from(new Set([...CATEGORIES.expense, ...transactions.filter(t => t.type==='expense').map(t=>t.category)])).sort(), [transactions]);
+
+  // Inventory Total Value (Memo)
+  const totalInventoryValue = useMemo(() => inventory.reduce((a, b) => a + (b.estimatedValue || 0), 0), [inventory]);
+
+  // --- Handlers ---
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newMonth = parseInt(e.target.value);
+    setSelectedMonth(newMonth);
+    const newDate = new Date(selectedYear, newMonth, 1);
+    setSelectedWeekDate(newDate);
+  };
+  const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newYear = parseInt(e.target.value);
+    setSelectedYear(newYear);
+    const newDate = new Date(newYear, selectedMonth, 1);
+    setSelectedWeekDate(newDate);
+  };
+  const handleWeekChange = (days: number) => {
+    const newDate = new Date(selectedWeekDate);
+    newDate.setDate(selectedWeekDate.getDate() + days);
+    setSelectedWeekDate(newDate);
+  };
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (e.target.value === 'custom') { setIsCustomCategory(true); setCategory('Lainnya'); setCustomCategory(''); } 
+    else { setIsCustomCategory(false); setCategory(e.target.value); }
+  };
+
+  const handleAddTransaction = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const finalCat = isCustomCategory ? customCategory : category;
+    if (!user || !amount || !description || !finalCat) return showToast("Lengkapi data", "error");
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'mosque_transactions'), {
+        amount: parseFloat(amount), type, category: finalCat, restriction, description, 
+        donorName: type === 'income' ? donorNameInput : '', isRegularDonor: type === 'income' ? isRegularDonor : false, date: Timestamp.now(), recordedBy: user.uid
+      });
+      setAmount(''); setDescription(''); setDonorNameInput(''); setCustomCategory(''); setIsRegularDonor(false);
+      showToast("Transaksi disimpan", "success");
+    } catch { showToast("Gagal simpan", "error"); }
+    setIsSubmitting(false);
+  };
+
+  const handleAddInventory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !invName || !invQty) return;
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'mosque_inventory'), {
+        name: invName, category: invCategory, quantity: parseInt(invQty), 
+        estimatedValue: parseFloat(invValue) || 0, // Save Estimated Value
+        condition: invCondition, location: invLocation, acquisitionDate: Timestamp.now(), recordedBy: user.uid
+      });
+      setInvName(''); setInvQty(''); setInvLocation(''); setInvValue('');
+      showToast("Barang ditambahkan", "success");
+    } catch { showToast("Gagal simpan", "error"); }
+    setIsSubmitting(false);
+  };
+
+  const handleDelete = async (id: string, col: string) => {
+    if(!window.confirm("Hapus data?")) return;
+    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', col, id));
+    showToast("Data dihapus", "success");
+  };
+
+  const handleGenerateData = async () => {
+    if (!user) return;
+    if (!confirmGenerate) { setConfirmGenerate(true); setTimeout(() => setConfirmGenerate(false), 4000); return; }
+    setConfirmGenerate(false); setIsGenerating(true); showToast("Generating data...", "info");
+    try {
+      const batch = writeBatch(db);
+      const start = new Date(); start.setFullYear(start.getFullYear() - 3); start.setDate(1);
+      const now = new Date();
+      let loop = new Date(start);
+      let count = 0;
+      const isRamadhan = (d: Date) => { const y=d.getFullYear(); const m=d.getMonth(); return (y===2023&&(m===2||m===3)) || (y===2024&&(m===2||m===3)) || (y===2025&&(m===1||m===2)) || (y===2026&&m===1); };
+
+      while (loop <= now) {
+         const ramadhan = isRamadhan(loop);
+         for(let i=0; i<4; i++) {
+            const ref = doc(collection(db, 'artifacts', appId, 'public', 'data', 'mosque_transactions'));
+            const d = new Date(loop); d.setDate(Math.min(28, (i*7)+2));
+            const amt = ramadhan ? 1500000 : 800000;
+            batch.set(ref, { amount: amt + Math.random()*500000, type: 'income', category: 'Infaq Jumat (Kotak Amal)', restriction: 'unrestricted', description: 'Infaq Jumat', date: Timestamp.fromDate(d), recordedBy: 'system' });
+            count++;
+         }
+         const expRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'mosque_transactions'));
+         const expD = new Date(loop); expD.setDate(10);
+         batch.set(expRef, { amount: ramadhan ? 1500000 : 1000000, type: 'expense', category: 'Operasional Masjid (Listrik/Air)', restriction: 'unrestricted', description: 'Listrik Air', date: Timestamp.fromDate(expD), recordedBy: 'system' });
+         count++;
+         
+         ["H. Ahmad", "Hj. Siti"].forEach(name => {
+            const donRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'mosque_transactions'));
+            const donD = new Date(loop); donD.setDate(5);
+            batch.set(donRef, { amount: 500000, type: 'income', category: 'Donasi Pembangunan', restriction: 'restricted', description: 'Donasi Rutin', donorName: name, isRegularDonor: true, date: Timestamp.fromDate(donD), recordedBy: 'system' });
+            count++;
+         });
+         
+         if(count % 10 === 0) {
+            const cRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'mosque_transactions'));
+            const cD = new Date(loop); cD.setDate(20);
+            batch.set(cRef, { amount: 2000000, type: 'income', category: 'Donasi Nasi Jumat', restriction: 'restricted', description: 'Nasi Jumat', date: Timestamp.fromDate(cD), recordedBy: 'system' });
+            count++;
+         }
+         loop.setMonth(loop.getMonth() + 1);
+         if(count > 480) break;
+      }
+      await batch.commit();
+      showToast("Data dummy berhasil dibuat", "success");
+      setActiveTab('dashboard');
+    } catch(e) { console.error(e); showToast("Gagal generate", "error"); }
+    setIsGenerating(false);
+  };
+
+  // Helper for Category Detail Modal
+  const categoryDetailData = useMemo(() => {
+    if (!viewCategoryDetail) return [];
+    let filtered = transactions.filter(t => t.category === viewCategoryDetail);
+    if (chartPeriod === 'weekly') {
+      const now = new Date();
+      const currentWeekNum = getWeekNumber(now);
+      filtered = filtered.filter(t => {
+        const d = t.date?.toDate ? t.date.toDate() : new Date();
+        return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth; 
+      });
+    } else if (chartPeriod === 'monthly') {
+      filtered = filtered.filter(t => {
+        const d = t.date?.toDate ? t.date.toDate() : new Date();
+        return d.getFullYear() === selectedYear; 
+      });
+    } else {
+       filtered = filtered.filter(t => {
+        const d = t.date?.toDate ? t.date.toDate() : new Date();
+        return d.getFullYear() === selectedYear;
+      });
+    }
+    
+    return transactions
+      .filter(t => t.category === viewCategoryDetail)
+      .sort((a, b) => (b.date?.toDate ? b.date.toDate() : new Date()).getTime() - (a.date?.toDate ? a.date.toDate() : new Date()).getTime())
+      .slice(0, 50);
+  }, [viewCategoryDetail, transactions, chartPeriod, selectedYear, selectedMonth]);
+
+  // Handle Search for Portal
+  const handleSearch = (overrideQuery?: string) => {
+    const query = overrideQuery || searchQuery;
+    if(query.trim()) {
+      const formattedName = query.replace(/\b\w/g, l => l.toUpperCase());
+      setSelectedMosqueName(formattedName);
+      setPortalView('profile');
+      setSearchQuery(''); 
+    } else {
+      showToast("Mohon ketik nama masjid terlebih dahulu", 'error');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900">
+      <ToastNotification toast={toast} />
+      
+      <div className="print:hidden">
+        {activeTab !== 'public_view' && activeTab !== 'public_portal' && (
+          <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:inset-0 md:h-screen md:relative flex flex-col`}>
+            <div className="p-6 border-b border-slate-800 flex items-center gap-2">
+              <Landmark className="text-emerald-400" /> <span className="font-bold text-lg">Masjid Amanah</span>
+              <button onClick={() => setIsSidebarOpen(false)} className="md:hidden ml-auto text-slate-400"><X size={20}/></button>
+            </div>
+            <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
+              {[
+                { id: 'dashboard', label: 'Dashboard', icon: PieIcon },
+                { id: 'entry', label: 'Input Transaksi', icon: PlusCircle },
+                { id: 'recap', label: 'Buku Kas (Rekap)', icon: FileSpreadsheet },
+                { id: 'donors', label: 'Donatur Tetap', icon: Users },
+                { id: 'inventory', label: 'Inventaris', icon: Package },
+                { id: 'transactions', label: 'Riwayat Data', icon: History },
+                { id: 'report', label: 'Laporan & Unduhan', icon: Printer },
+                { id: 'public_view', label: 'Monitor (Publik)', icon: Monitor },
+                { id: 'public_portal', label: 'Portal Publik (Simulasi)', icon: Globe }, // New Tab
+                { id: 'settings', label: 'Pengaturan Masjid', icon: Settings } // New Tab
+              ].map((menu) => (
+                <button key={menu.id} onClick={() => { setActiveTab(menu.id as any); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === menu.id ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+                  <menu.icon size={20} /> <span>{menu.label}</span>
+                </button>
+              ))}
+            </nav>
+            <div className="w-full p-6 border-t border-slate-800">
+               <div className="text-xs text-slate-500"><p>Sistem Keuangan Masjid</p><p>V3.16.0 • ISAK 35 Compliant</p></div>
+            </div>
+          </aside>
+        )}
+      </div>
+
+      <main className={`flex-1 overflow-y-auto h-screen relative ${(activeTab === 'public_view' || activeTab === 'public_portal') ? '' : ''} print:overflow-visible print:h-auto print:bg-white`}>
+        <div className="print:hidden">
+          {activeTab !== 'public_view' && activeTab !== 'public_portal' && (
+            <header className="bg-white shadow-sm p-4 md:hidden flex items-center justify-between sticky top-0 z-40">
+              <div className="flex items-center gap-2"><Landmark className="text-emerald-600" size={24} /><span className="font-bold text-slate-800">Masjid Amanah</span></div>
+              <button onClick={() => setIsSidebarOpen(true)} className="text-slate-600"><Menu size={24} /></button>
+            </header>
+          )}
+        </div>
+
+        <div className={(activeTab === 'public_view' || activeTab === 'public_portal') ? 'h-full w-full' : 'p-6 md:p-8 max-w-7xl mx-auto print:p-0 print:max-w-none'}>
+          {loading ? (
+             <div className="flex items-center justify-center h-64 text-emerald-600 animate-pulse print:hidden">Loading Data...</div>
+          ) : (
+            <>
+              {/* DASHBOARD VIEW */}
+              {activeTab === 'dashboard' && (
+                <div className="space-y-6 animate-in fade-in">
+                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <StatCard title="Total Aset" value={stats.totalAssets} subtext="Total Kas" icon={Wallet} colorClass="bg-blue-500" />
+                    <StatCard title="Dana Operasional" value={stats.netAssetsUnrestricted} subtext="Tanpa Pembatasan" icon={TrendingUp} colorClass="bg-emerald-500" />
+                    <StatCard title="Dana Terikat" value={stats.netAssetsRestricted} subtext="Yatim / Pembangunan" icon={Landmark} colorClass="bg-amber-500" />
+                    <StatCard title="Surplus/Defisit" value={stats.surplusDeficit} subtext="Total Periode Ini" icon={stats.surplusDeficit >= 0 ? PlusCircle : AlertCircle} colorClass={stats.surplusDeficit >= 0 ? "bg-teal-500" : "bg-red-500"} />
+                  </div>
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Coins className="text-amber-500" size={18}/> Monitoring Saldo Dana Terikat</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      {FUND_GROUPS.map(g => (
+                        <div key={g.id} className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                           <h4 className="text-xs text-slate-500 uppercase font-bold mb-1">{g.name}</h4>
+                           <p className="text-lg font-bold text-slate-800">{formatCurrency(fundBalances.groups[g.id] || 0)}</p>
+                        </div>
+                      ))}
+                      {Object.entries(fundBalances.dynamic).map(([k, v]) => (
+                        v !== 0 && <div key={k} className="p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
+                           <h4 className="text-xs text-indigo-500 uppercase font-bold mb-1">{k}</h4>
+                           <p className="text-lg font-bold text-indigo-800">{formatCurrency(v)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                   <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 h-80">
+                      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4">
+                        <h3 className="font-bold text-slate-800 flex items-center gap-2"><TrendingUp size={18} className="text-emerald-500" /> Statistik {chartPeriod === 'weekly' ? 'Mingguan' : chartPeriod === 'monthly' ? 'Bulanan' : 'Tahunan'}</h3>
+                        <div className="flex gap-2">
+                           <button onClick={()=>setChartPeriod('weekly')} className={`px-3 py-1 text-sm rounded ${chartPeriod==='weekly'?'bg-emerald-500 text-white':'bg-slate-100'}`}>Mingguan</button>
+                           <button onClick={()=>setChartPeriod('monthly')} className={`px-3 py-1 text-sm rounded ${chartPeriod==='monthly'?'bg-emerald-500 text-white':'bg-slate-100'}`}>Bulanan</button>
+                           <button onClick={()=>setChartPeriod('yearly')} className={`px-3 py-1 text-sm rounded ${chartPeriod==='yearly'?'bg-emerald-500 text-white':'bg-slate-100'}`}>Tahunan</button>
+                        </div>
+                      </div>
+                      <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={stats.chartData}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                            <XAxis dataKey="name" fontSize={12} />
+                            <YAxis fontSize={12} tickFormatter={(v)=>`${v/1000}k`} />
+                            <Tooltip formatter={(v:any)=>formatCurrency(v)} />
+                            <Legend />
+                            <Bar dataKey="income" name="Pemasukan" fill={COLORS.primary} />
+                            <Bar dataKey="expense" name="Pengeluaran" fill={COLORS.danger} />
+                          </BarChart>
+                      </ResponsiveContainer>
+                   </div>
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                     <div className="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                        <h3 className="font-bold text-slate-800 mb-4">Rincian Pengeluaran (Klik untuk Detail)</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                           <div>
+                              <h4 className="text-xs font-bold text-violet-700 uppercase mb-2">Program</h4>
+                              {Object.entries(stats.expenseStats.byCategory).filter(([cat]) => EXPENSE_FUNCTIONS.program.includes(cat)).map(([cat, val]) => (
+                                  <div key={cat} onClick={() => setViewCategoryDetail(cat)} className="flex justify-between text-sm mb-1 cursor-pointer hover:bg-violet-50 p-1 rounded transition-colors"><span className="text-slate-600 truncate mr-2" title={cat}>{cat}</span><span className="font-medium">{formatCurrency(val)}</span></div>
+                              ))}
+                           </div>
+                           <div>
+                              <h4 className="text-xs font-bold text-slate-600 uppercase mb-2">Manajemen</h4>
+                              {Object.entries(stats.expenseStats.byCategory).filter(([cat]) => !EXPENSE_FUNCTIONS.program.includes(cat)).map(([cat, val]) => (
+                                  <div key={cat} onClick={() => setViewCategoryDetail(cat)} className="flex justify-between text-sm mb-1 cursor-pointer hover:bg-slate-50 p-1 rounded transition-colors"><span className="text-slate-600 truncate mr-2" title={cat}>{cat}</span><span className="font-medium">{formatCurrency(val)}</span></div>
+                              ))}
+                           </div>
+                        </div>
+                     </div>
+                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col">
+                        <div className="mb-6">
+                          <h3 className="font-bold text-slate-800 mb-4">Komposisi Aset</h3>
+                          <div className="h-40">
+                             <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                <Pie data={[{ name: 'Unrestricted', value: stats.netAssetsUnrestricted }, { name: 'Restricted', value: stats.netAssetsRestricted }]} cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={5} dataKey="value">
+                                  <Cell fill={COLORS.primary} />
+                                  <Cell fill={COLORS.accent} />
+                                </Pie>
+                                <Tooltip formatter={(v:any)=>formatCurrency(v)} />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                        <h3 className="font-bold text-slate-800 mb-4">Liabilitas</h3>
+                        <div className="text-center p-4 bg-slate-50 rounded border border-dashed flex-1 flex items-center justify-center">
+                            <div className="text-center">
+                                {stats.totalLiabilities !== 0 ? (
+                                    <>
+                                        <h4 className="font-bold text-red-600 text-lg">{formatCurrency(stats.totalLiabilities)}</h4>
+                                        <p className="text-xs text-slate-400">Total Kewajiban (Utang)</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <h4 className="font-medium">Tidak Ada Kewajiban</h4>
+                                        <p className="text-xs text-slate-400">Masjid bebas utang.</p>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                     </div>
+                   </div>
+                   <div className="flex justify-end"><button onClick={() => setIsDetailModalOpen(true)} className="text-emerald-600 text-sm font-medium flex items-center gap-1 hover:text-emerald-700 transition-colors bg-emerald-50 px-3 py-2 rounded-lg"><TableIcon size={16} /> Lihat Detail Data Grafik</button></div>
+                </div>
+              )}
+
+              {/* ... ENTRY, INVENTORY, TRANSACTIONS, RECAP, DONORS, REPORT (Standard) ... */}
+              {activeTab === 'entry' && (
+                 <div className="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h2 className="text-xl font-bold mb-6">Input Transaksi</h2>
+                    <form onSubmit={handleAddTransaction} className="space-y-6">
+                       <div className="grid grid-cols-2 gap-4">
+                          <button type="button" onClick={() => setType('income')} className={`p-4 rounded border-2 flex flex-col items-center ${type==='income' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-200'}`}><TrendingUp/> Pemasukan</button>
+                          <button type="button" onClick={() => setType('expense')} className={`p-4 rounded border-2 flex flex-col items-center ${type==='expense' ? 'border-red-500 bg-red-50 text-red-700' : 'border-slate-200'}`}><TrendingDown/> Pengeluaran</button>
+                       </div>
+                       <div><label className="block text-sm font-bold mb-2">Nominal</label><input type="number" value={amount} onChange={e=>setAmount(e.target.value)} className="w-full p-3 border rounded-lg" placeholder="0" /></div>
+                       <div className={`p-4 rounded border ${type==='expense' && restriction==='restricted' && parseFloat(amount) > currentRestrictedBalance ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
+                          <label className="block text-sm font-bold mb-2">Jenis Dana</label>
+                          <div className="space-y-2">
+                             <label className="flex items-center gap-2"><input type="radio" checked={restriction==='unrestricted'} onChange={()=>setRestriction('unrestricted')} /> Tanpa Pembatasan (Operasional)</label>
+                             <label className="flex items-center gap-2"><input type="radio" checked={restriction==='restricted'} onChange={()=>setRestriction('restricted')} /> Dengan Pembatasan (Khusus)</label>
+                          </div>
+                          {type==='expense' && restriction==='restricted' && parseFloat(amount) > currentRestrictedBalance && (<div className="mt-3 p-2 bg-orange-100 text-orange-800 text-sm rounded flex items-start gap-2"><AlertTriangle size={16} className="mt-0.5" /><div><strong>Peringatan Defisit:</strong> Saldo terikat kategori ini hanya {formatCurrency(currentRestrictedBalance)}. Kekurangan akan diambil dari Kas Operasional.</div></div>)}
+                          {type==='expense' && restriction==='unrestricted' && parseFloat(amount) > stats.netAssetsUnrestricted && (<div className="mt-3 p-2 bg-red-100 text-red-800 text-sm rounded flex items-start gap-2"><AlertTriangle size={16} className="mt-0.5" /><div><strong>Saldo Kas Kurang:</strong> Pengeluaran ini akan menyebabkan kas operasional minus (Defisit).</div></div>)}
+                       </div>
+                       <div className="grid grid-cols-2 gap-4">
+                          <div><label className="block text-sm font-bold mb-2">Kategori</label><select value={isCustomCategory ? 'custom' : category} onChange={handleCategoryChange} className="w-full p-3 border rounded-lg bg-white">{(type==='income' ? CATEGORIES.income : CATEGORIES.expense).map(c => <option key={c} value={c}>{c}</option>)}{availableDynamicCategories.length > 0 && <optgroup label="Dana Terikat Tersedia">{availableDynamicCategories.map(c => <option key={c} value={c}>{c}</option>)}</optgroup>}<option value="custom">+ Kategori Khusus...</option></select>{isCustomCategory && <input type="text" value={customCategory} onChange={e=>setCustomCategory(e.target.value)} className="w-full p-2 mt-2 border rounded border-indigo-300" placeholder="Nama Kategori..." />}</div>
+                          <div><label className="block text-sm font-bold mb-2">Keterangan</label><input type="text" value={description} onChange={e=>setDescription(e.target.value)} className="w-full p-3 border rounded-lg" /></div>
+                       </div>
+                       {type === 'income' && (<div className="md:col-span-2 bg-slate-50 p-4 rounded-lg border border-slate-200"><label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2"><Users size={16} /> Nama Donatur (Opsional)</label><input type="text" value={donorNameInput} onChange={e=>setDonorNameInput(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Nama Donatur" />{donorNameInput && (<label className="flex items-center gap-2 mt-3 text-sm text-slate-700 cursor-pointer"><input type="checkbox" checked={isRegularDonor} onChange={e => setIsRegularDonor(e.target.checked)} className="rounded text-emerald-600 focus:ring-emerald-500" /><span>Catat sebagai Donatur Tetap (Rutin)</span></label>)}</div>)}
+                       <button disabled={isSubmitting} className="w-full bg-slate-900 text-white p-4 rounded-lg font-bold hover:bg-slate-800 disabled:opacity-50">{isSubmitting ? 'Menyimpan...' : 'Simpan Transaksi'}</button>
+                    </form>
+                 </div>
+              )}
+
+              {activeTab === 'inventory' && (
+                 <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100"><h2 className="text-xl font-bold mb-4">Input Inventaris</h2><form onSubmit={handleAddInventory} className="grid grid-cols-1 md:grid-cols-2 gap-4"><input className="p-3 border rounded" placeholder="Nama Barang" value={invName} onChange={e=>setInvName(e.target.value)} required /><select className="p-3 border rounded bg-white" value={invCategory} onChange={e=>setInvCategory(e.target.value)}>{INVENTORY_CATEGORIES.map(c=><option key={c} value={c}>{c}</option>)}</select><input type="number" className="p-3 border rounded" placeholder="Jumlah" value={invQty} onChange={e=>setInvQty(e.target.value)} required /><input className="p-3 border rounded" placeholder="Lokasi" value={invLocation} onChange={e=>setInvLocation(e.target.value)} /><div className="md:col-span-2"><label className="block text-sm font-bold mb-2 text-slate-600">Estimasi Nilai Total (Rp) - Opsional</label><input type="number" className="w-full p-3 border rounded" placeholder="Contoh: 5000000" value={invValue} onChange={e=>setInvValue(e.target.value)} /></div><button disabled={isSubmitting} className="md:col-span-2 bg-slate-900 text-white p-3 rounded font-bold">{isSubmitting ? '...' : 'Tambah'}</button></form></div>
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden"><div className="p-4 bg-slate-50 border-b flex justify-between items-center"><h3 className="font-bold">Daftar Aset</h3><span className="text-sm font-bold text-slate-600">Total Estimasi Aset: {formatCurrency(totalInventoryValue)}</span></div><table className="w-full text-sm text-left"><thead className="bg-slate-50"><tr><th className="p-4">Barang</th><th className="p-4">Kategori</th><th className="p-4">Jml</th><th className="p-4">Est. Nilai</th><th className="p-4">Aksi</th></tr></thead><tbody>{inventory.map(i => (<tr key={i.id} className="border-t"><td className="p-4 font-medium">{i.name}</td><td className="p-4">{i.category}</td><td className="p-4">{i.quantity}</td><td className="p-4">{i.estimatedValue ? formatCurrency(i.estimatedValue) : '-'}</td><td className="p-4"><button onClick={()=>handleDelete(i.id, 'mosque_inventory')}><Trash2 size={16} className="text-red-500"/></button></td></tr>))}</tbody></table></div>
+                 </div>
+              )}
+
+              {activeTab === 'transactions' && (
+                 <div className="space-y-4">
+                    <div className="flex justify-between items-center"><h2 className="text-xl font-bold">Riwayat Transaksi</h2><button onClick={handleGenerateData} disabled={isGenerating} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">{isGenerating ? 'Loading...' : 'Generate Data'}</button></div>
+                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden"><table className="w-full text-sm text-left"><thead className="bg-slate-50"><tr><th className="p-3">Tgl</th><th className="p-3">Kategori</th><th className="p-3">Ket</th><th className="p-3 text-right">Nominal</th><th className="p-3 text-center">Aksi</th></tr></thead><tbody className="divide-y">{transactions.map(t => (<tr key={t.id} className="hover:bg-slate-50"><td className="p-3">{formatDate(t.date)}</td><td className="p-3 font-medium">{t.category}</td><td className="p-3 text-slate-500">{t.description}</td><td className={`p-3 text-right font-bold ${t.type==='income'?'text-emerald-600':'text-red-600'}`}>{t.type==='expense'?'-':'+'}{formatCurrency(t.amount)}</td><td className="p-3 text-center"><button onClick={()=>handleDelete(t.id, 'mosque_transactions')}><Trash2 size={16} className="text-red-400"/></button></td></tr>))}</tbody></table></div>
+                 </div>
+              )}
+
+              {activeTab === 'recap' && (
+                <div className="space-y-6 animate-in fade-in duration-500">
+                   <div className="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm gap-4"><h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><FileSpreadsheet className="text-emerald-500" /> Buku Kas (Rekapitulasi)</h2><div className="flex gap-2 items-center"><span className="text-sm text-slate-500">Periode:</span><select value={selectedMonth} onChange={handleMonthChange} className="p-2 border rounded text-sm bg-white cursor-pointer">{MONTH_NAMES.map((m,i)=><option key={m} value={i}>{m}</option>)}</select><select value={selectedYear} onChange={handleYearChange} className="p-2 border rounded text-sm bg-white cursor-pointer">{availableYears.map(y=><option key={y} value={y}>{y}</option>)}</select></div></div>
+                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-100 flex flex-col"><div className="p-4 bg-emerald-50 border-b border-emerald-100 flex justify-between items-center"><div><h3 className="font-bold text-emerald-800 flex items-center gap-2"><CalendarDays size={18}/> Transaksi Pekan Ini</h3><p className="text-xs text-emerald-600 font-medium">{recapData.startOfWeek.getDate()} - {recapData.endOfWeek.getDate()} {MONTH_NAMES[recapData.startOfWeek.getMonth()]} {recapData.startOfWeek.getFullYear()}</p></div><div className="flex gap-1"><button onClick={() => handleWeekChange(-7)} className="p-1 hover:bg-emerald-200 rounded text-emerald-700"><ChevronLeft size={20}/></button><button onClick={() => handleWeekChange(7)} className="p-1 hover:bg-emerald-200 rounded text-emerald-700"><ChevronRight size={20}/></button></div></div><div className="overflow-x-auto max-h-[500px] flex-1"><table className="w-full text-sm"><thead className="bg-slate-50 sticky top-0 z-10 shadow-sm"><tr><th className="p-3 text-left font-semibold">Tgl</th><th className="p-3 text-left font-semibold">Uraian</th><th className="p-3 text-right font-semibold">Masuk</th><th className="p-3 text-right font-semibold">Keluar</th></tr></thead><tbody className="divide-y">{recapData.weekly.length===0?<tr><td colSpan={4} className="p-8 text-center text-slate-400 italic">Tidak ada transaksi.</td></tr>:recapData.weekly.map(t=>(<tr key={t.id} className="hover:bg-slate-50"><td className="p-3 text-slate-500 whitespace-nowrap">{formatDate(t.date).split(' ')[0]}</td><td className="p-3"><div className="font-medium text-slate-800">{t.category}</div><div className="text-xs text-slate-400 truncate max-w-[150px]">{t.description}</div></td><td className="p-3 text-right text-emerald-600 font-medium">{t.type==='income'?formatCurrency(t.amount):'-'}</td><td className="p-3 text-right text-red-600 font-medium">{t.type==='expense'?formatCurrency(t.amount):'-'}</td></tr>))}</tbody><tfoot className="bg-slate-50 font-bold border-t border-slate-200"><tr><td colSpan={2} className="p-3 text-right text-slate-600">Total Pekan Ini</td><td className="p-3 text-right text-emerald-700">{formatCurrency(recapData.weekly.reduce((a,b)=>a+(b.type==='income'?b.amount:0),0))}</td><td className="p-3 text-right text-red-700">{formatCurrency(recapData.weekly.reduce((a,b)=>a+(b.type==='expense'?b.amount:0),0))}</td></tr></tfoot></table></div></div>
+                      <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-100 flex flex-col"><div className="p-4 bg-blue-50 border-b border-blue-100"><h3 className="font-bold text-blue-800 flex items-center gap-2"><Calendar size={18}/> Transaksi Bulan Ini</h3><p className="text-xs text-blue-600">{MONTH_NAMES[selectedMonth]} {selectedYear}</p></div><div className="overflow-x-auto max-h-[500px] flex-1"><table className="w-full text-sm"><thead className="bg-slate-50 sticky top-0 z-10 shadow-sm"><tr><th className="p-3 text-left font-semibold">Tgl</th><th className="p-3 text-left font-semibold">Uraian</th><th className="p-3 text-right font-semibold">Masuk</th><th className="p-3 text-right font-semibold">Keluar</th></tr></thead><tbody className="divide-y">{recapData.monthly.length===0?<tr><td colSpan={4} className="p-8 text-center text-slate-400 italic">Tidak ada transaksi.</td></tr>:recapData.monthly.map(t=>(<tr key={t.id} className="hover:bg-slate-50"><td className="p-3 text-slate-500 whitespace-nowrap">{formatDate(t.date).split(' ')[0]}</td><td className="p-3"><div className="font-medium text-slate-800">{t.category}</div><div className="text-xs text-slate-400 truncate max-w-[150px]">{t.description}</div></td><td className="p-3 text-right text-emerald-600 font-medium">{t.type==='income'?formatCurrency(t.amount):'-'}</td><td className="p-3 text-right text-red-600 font-medium">{t.type==='expense'?formatCurrency(t.amount):'-'}</td></tr>))}</tbody><tfoot className="bg-slate-50 font-bold border-t border-slate-200"><tr><td colSpan={2} className="p-3 text-right text-slate-600">Total Bulan Ini</td><td className="p-3 text-right text-emerald-700">{formatCurrency(recapData.monthly.reduce((a,b)=>a+(b.type==='income'?b.amount:0),0))}</td><td className="p-3 text-right text-red-700">{formatCurrency(recapData.monthly.reduce((a,b)=>a+(b.type==='expense'?b.amount:0),0))}</td></tr></tfoot></table></div></div>
+                   </div>
+                </div>
+              )}
+
+              {activeTab === 'donors' && (
+                 <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100"><div className="flex justify-between items-center mb-6"><h2 className="text-xl font-bold text-slate-800">Rekapitulasi Donatur Tetap</h2><div className="flex items-center gap-4 bg-slate-50 p-2 rounded"><button onClick={() => setDonorViewYear(y => y-1)}><ChevronLeft size={20}/></button><span className="font-bold">{donorViewYear}</span><button onClick={() => setDonorViewYear(y => y+1)}><ChevronRight size={20}/></button></div></div><div className="overflow-x-auto"><table className="w-full text-sm text-left"><thead><tr className="bg-slate-100 text-slate-600"><th className="p-3 sticky left-0 bg-slate-100">Nama</th>{SHORT_MONTH_NAMES.map(m => <th key={m} className="p-3 text-center">{m}</th>)}<th className="p-3 text-right">Total</th></tr></thead><tbody className="divide-y divide-slate-100">{donorStats.length === 0 ? <tr><td colSpan={14} className="p-6 text-center text-slate-400">Belum ada data.</td></tr> : donorStats.map(d => (<tr key={d.name} className="hover:bg-slate-50"><td className="p-3 font-medium sticky left-0 bg-white">{d.name}</td>{d.months.map((v, i) => <td key={i} className={`p-3 text-center ${v>0 ? 'text-emerald-600 font-bold bg-emerald-50/50' : 'text-slate-300'}`}>{v > 0 ? (v >= 1000000 ? `${(v/1000000).toFixed(1)}j` : `${(v/1000).toFixed(0)}k`) : '-'}</td>)}<td className="p-3 text-right font-bold">{formatCurrency(d.total)}</td></tr>))}</tbody></table></div></div>
+                 </div>
+              )}
+
+              {activeTab === 'report' && (
+                 <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 print:hidden">
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6"><div><h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Printer className="text-emerald-500"/> Laporan Keuangan & Unduhan</h2><p className="text-sm text-slate-500">Pilih periode laporan untuk dicetak atau disimpan sebagai PDF.</p></div><button onClick={handlePrint} className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-lg hover:bg-slate-800 font-bold shadow-lg transition-all active:scale-95"><Printer size={20}/> Cetak / Simpan PDF</button></div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                         <div>
+                            <label className="block text-xs font-bold text-slate-700 uppercase mb-2">Jenis Periode</label>
+                            <div className="flex bg-white rounded-md border border-slate-300 overflow-hidden mb-4">{['weekly', 'monthly', 'yearly'].map(p => (<button key={p} onClick={() => setReportPeriod(p as any)} className={`flex-1 py-2 text-sm font-medium transition-colors ${reportPeriod === p ? 'bg-emerald-500 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>{p === 'weekly' ? 'Mingguan' : p === 'monthly' ? 'Bulanan' : 'Tahunan'}</button>))}</div>
+                            <label className="block text-xs font-bold text-slate-700 uppercase mb-2">Mode Tampilan Laporan</label>
+                            <div className="flex bg-white rounded-md border border-slate-300 overflow-hidden">
+                               <button onClick={() => setReportViewMode('admin')} className={`flex-1 py-2 text-sm font-medium transition-colors ${reportViewMode === 'admin' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}><Eye size={16} className="inline mr-1"/> Admin (Detail)</button>
+                               <button onClick={() => setReportViewMode('public')} className={`flex-1 py-2 text-sm font-medium transition-colors ${reportViewMode === 'public' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}><EyeOff size={16} className="inline mr-1"/> Jamaah (Ringkas)</button>
+                            </div>
+                         </div>
+                         <div className="md:col-span-2 flex gap-4">{reportPeriod === 'weekly' && (<div className="flex-1"><label className="block text-xs font-bold text-slate-700 uppercase mb-2">Pilih Tanggal</label><input type="date" value={reportWeekDate.toISOString().split('T')[0]} onChange={(e) => setReportWeekDate(new Date(e.target.value))} className="w-full p-2 border border-slate-300 rounded-md text-sm" /></div>)}{(reportPeriod === 'monthly' || reportPeriod === 'weekly') && (<div className="flex-1"><label className="block text-xs font-bold text-slate-700 uppercase mb-2">Bulan</label><select value={reportMonth} onChange={(e) => {setReportMonth(parseInt(e.target.value)); if(reportPeriod==='weekly') { const d = new Date(reportWeekDate); d.setMonth(parseInt(e.target.value)); setReportWeekDate(d); }}} className="w-full p-2 border border-slate-300 rounded-md text-sm bg-white">{MONTH_NAMES.map((m, i) => <option key={m} value={i}>{m}</option>)}</select></div>)}<div className="flex-1"><label className="block text-xs font-bold text-slate-700 uppercase mb-2">Tahun</label><select value={reportYear} onChange={(e) => {setReportYear(parseInt(e.target.value)); if(reportPeriod==='weekly') { const d = new Date(reportWeekDate); d.setFullYear(parseInt(e.target.value)); setReportWeekDate(d); }}} className="w-full p-2 border border-slate-300 rounded-md text-sm bg-white">{availableYears.map(y => <option key={y} value={y}>{y}</option>)}</select></div></div>
+                      </div>
+                    </div>
+                    <div ref={printableRef} className="bg-white p-8 md:p-12 shadow-lg border border-slate-200 mx-auto max-w-[210mm] print:shadow-none print:border-0 print:p-0 print:max-w-none print:w-full">
+                      <div className="text-center border-b-2 border-slate-800 pb-6 mb-8"><h1 className="text-3xl font-bold text-slate-900 uppercase tracking-wide mb-2">Masjid Amanah</h1><p className="text-slate-500">Jl. Contoh Alamat No. 123, Kota Sejahtera</p></div>
+                      <div className="text-center mb-8"><h2 className="text-xl font-bold text-slate-800 uppercase underline decoration-2 underline-offset-4">Laporan Keuangan {reportViewMode === 'public' ? 'Ringkas' : 'Lengkap'} (ISAK 35)</h2><p className="text-slate-600 mt-2 font-medium">Periode: {reportData.title}</p></div>
+                      <div className="mb-8"><h3 className="font-bold text-slate-700 mb-2 uppercase text-sm border-l-4 border-slate-800 pl-2">A. Laporan Penghasilan Komprehensif</h3><table className="w-full text-sm border-collapse border border-slate-300"><thead><tr className="bg-slate-100"><th className="border border-slate-300 p-2 text-left w-1/3">Uraian</th><th className="border border-slate-300 p-2 text-right w-1/5">Tanpa Pembatasan</th><th className="border border-slate-300 p-2 text-right w-1/5">Dengan Pembatasan</th><th className="border border-slate-300 p-2 text-right w-1/5 bg-slate-200">Total</th></tr></thead><tbody>
+                          <tr className="bg-slate-50"><td colSpan={4} className="border border-slate-300 p-2 font-bold italic">1. PENGHASILAN</td></tr>
+                          {/* Conditional Rendering for Detail Rows */}
+                          {reportViewMode === 'admin' && Object.keys(reportData.current.incomeDetails).sort().map(cat => { const {un, res} = reportData.current.incomeDetails[cat]; return <tr key={cat}><td className="border border-slate-300 p-2 pl-6">{cat}</td><td className="border border-slate-300 p-2 text-right">{un > 0 ? formatCurrency(un) : '-'}</td><td className="border border-slate-300 p-2 text-right">{res > 0 ? formatCurrency(res) : '-'}</td><td className="border border-slate-300 p-2 text-right font-medium">{formatCurrency(un + res)}</td></tr> })}
+                          
+                          <tr className="font-bold bg-slate-50"><td className="border border-slate-300 p-2 text-right">Total Penghasilan</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.current.incomeUn)}</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.current.incomeRes)}</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.current.incomeUn + reportData.current.incomeRes)}</td></tr>
+                          
+                          <tr className="bg-slate-50"><td colSpan={4} className="border border-slate-300 p-2 font-bold italic">2. BEBAN</td></tr>
+                          {/* Conditional Rendering for Detail Rows */}
+                          {reportViewMode === 'admin' && Object.keys(reportData.current.expenseDetails).sort().map(cat => { const {un, res} = reportData.current.expenseDetails[cat]; return <tr key={cat}><td className="border border-slate-300 p-2 pl-6">{cat}</td><td className="border border-slate-300 p-2 text-right text-red-600">({un > 0 ? formatCurrency(un) : '-'})</td><td className="border border-slate-300 p-2 text-right text-red-600">({res > 0 ? formatCurrency(res) : '-'})</td><td className="border border-slate-300 p-2 text-right font-medium text-red-600">({formatCurrency(un + res)})</td></tr> })}
+                          
+                          <tr className="font-bold bg-slate-50"><td className="border border-slate-300 p-2 text-right">Total Beban</td><td className="border border-slate-300 p-2 text-right text-red-600">({formatCurrency(reportData.current.expenseUn)})</td><td className="border border-slate-300 p-2 text-right text-red-600">({formatCurrency(reportData.current.expenseRes)})</td><td className="border border-slate-300 p-2 text-right text-red-600">({formatCurrency(reportData.current.expenseUn + reportData.current.expenseRes)})</td></tr>
+                          <tr className="font-bold bg-slate-200 text-slate-800 border-t-2 border-slate-400"><td className="border border-slate-300 p-2">SURPLUS / (DEFISIT) PERIODE INI</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.surplus.un)}</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.surplus.res)}</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.surplus.total)}</td></tr></tbody></table></div>
+                      <div className="mb-12"><h3 className="font-bold text-slate-700 mb-2 uppercase text-sm border-l-4 border-slate-800 pl-2">B. Perubahan Aset Neto</h3><table className="w-full text-sm border-collapse border border-slate-300"><thead><tr className="bg-slate-100"><th className="border border-slate-300 p-2 text-left w-1/3">Keterangan</th><th className="border border-slate-300 p-2 text-right w-1/5">Tanpa Pembatasan</th><th className="border border-slate-300 p-2 text-right w-1/5">Dengan Pembatasan</th><th className="border border-slate-300 p-2 text-right w-1/5 bg-slate-200">Total</th></tr></thead><tbody><tr><td className="border border-slate-300 p-2">Saldo Awal (Sebelum Periode)</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.opening.un)}</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.opening.res)}</td><td className="border border-slate-300 p-2 text-right font-bold">{formatCurrency(reportData.opening.total)}</td></tr><tr><td className="border border-slate-300 p-2">Perubahan (Surplus/Defisit)</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.surplus.un)}</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.surplus.res)}</td><td className="border border-slate-300 p-2 text-right font-bold">{formatCurrency(reportData.surplus.total)}</td></tr><tr className="bg-slate-100 font-bold"><td className="border border-slate-300 p-2">SALDO AKHIR ASET NETO</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.closing.un)}</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.closing.res)}</td><td className="border border-slate-300 p-2 text-right bg-slate-200">{formatCurrency(reportData.closing.total)}</td></tr></tbody></table></div>
+                      
+                      {/* Hide C & D for Public Version */}
+                      {reportViewMode === 'admin' && (
+                        <>
+                          <div className="mb-12"><h3 className="font-bold text-slate-700 mb-2 uppercase text-sm border-l-4 border-slate-800 pl-2">C. Laporan Beban Berdasarkan Fungsi</h3><div className="grid grid-cols-2 gap-8"><div><h4 className="font-bold text-violet-700 mb-2 border-b text-sm">Beban Program (Layanan Umat)</h4>{Object.entries(stats.expenseStats.byCategory).filter(([c])=>EXPENSE_FUNCTIONS.program.includes(c)).map(([c,v])=>(<div key={c} className="flex justify-between text-xs py-1 border-b border-slate-100"><span>{c}</span><span className="font-medium">{formatCurrency(v)}</span></div>))}</div><div><h4 className="font-bold text-slate-700 mb-2 border-b text-sm">Beban Manajemen & Umum</h4>{Object.entries(stats.expenseStats.byCategory).filter(([c])=>!EXPENSE_FUNCTIONS.program.includes(c)).map(([c,v])=>(<div key={c} className="flex justify-between text-xs py-1 border-b border-slate-100"><span>{c}</span><span className="font-medium">{formatCurrency(v)}</span></div>))}</div></div></div>
+                          <div className="mb-12"><h3 className="font-bold text-slate-700 mb-2 uppercase text-sm border-l-4 border-slate-800 pl-2">D. Laporan Arus Kas</h3><table className="w-full text-sm border-collapse border border-slate-300"><tbody><tr className="bg-slate-100 font-bold"><td colSpan={2} className="border border-slate-300 p-2">AKTIVITAS OPERASI</td></tr><tr><td className="border border-slate-300 p-2 w-2/3">Penerimaan Kas</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.cashFlow.operatingIn)}</td></tr><tr><td className="border border-slate-300 p-2">Pengeluaran Kas</td><td className="border border-slate-300 p-2 text-right text-red-600">({formatCurrency(reportData.cashFlow.operatingOut)})</td></tr><tr className="font-bold bg-slate-50"><td className="border border-slate-300 p-2 text-right">Arus Kas Bersih Operasi</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.cashFlow.operatingIn - reportData.cashFlow.operatingOut)}</td></tr><tr className="bg-slate-200 font-bold border-t-2 border-slate-400"><td className="border border-slate-300 p-2">KENAIKAN/(PENURUNAN) KAS</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.surplus.total)}</td></tr><tr><td className="border border-slate-300 p-2">Saldo Kas Awal</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.opening.total)}</td></tr><tr className="font-bold"><td className="border border-slate-300 p-2">SALDO KAS AKHIR</td><td className="border border-slate-300 p-2 text-right">{formatCurrency(reportData.closing.total)}</td></tr></tbody></table></div>
+                        </>
+                      )}
+
+                      <div className="grid grid-cols-3 gap-8 mt-16 text-center text-sm text-slate-800"><div><p className="mb-16">Mengetahui,</p><p className="font-bold underline">H. Fulan Bin Fulan</p><p>Ketua DKM</p></div><div></div><div><p className="mb-16">Dibuat Oleh,</p><p className="font-bold underline">Bendahara Masjid</p><p>Staf Keuangan</p></div></div>
+                   </div>
+                </div>
+              )}
+
+              {activeTab === 'public_portal' && (
+                 <div className="bg-slate-50 min-h-full">
+                    {/* Public Portal Content */}
+                    <div className="bg-white border-b border-slate-200 sticky top-0 z-50">
+                       <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+                          <div className="flex items-center gap-2 font-bold text-emerald-600 text-lg cursor-pointer" onClick={() => setPortalView('search')}><Globe size={24}/> MasjidTransparan.id</div>
+                          <button onClick={()=>setPortalView('search')} className="text-sm font-medium text-slate-500 hover:text-emerald-600">Cari Masjid Lain</button>
+                       </div>
+                    </div>
+
+                    {portalView === 'search' ? (
+                       <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 text-center animate-in fade-in zoom-in-95 duration-500">
+                          <h1 className="text-3xl md:text-5xl font-extrabold text-slate-800 mb-4 tracking-tight">Transparansi Keuangan <br/><span className="text-emerald-500">Masjid Indonesia</span></h1>
+                          <p className="text-slate-500 max-w-lg mb-8 text-lg">Cari masjid di sekitar Anda dan lihat laporan keuangannya secara real-time, akuntabel, dan terpercaya.</p>
+                          
+                          <div className="relative w-full max-w-md mb-6">
+                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Search className="text-slate-400"/></div>
+                             <input 
+                               type="text" 
+                               className="block w-full pl-10 pr-4 py-4 border border-slate-200 rounded-full shadow-lg shadow-slate-100 focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 outline-none text-lg transition-all" 
+                               placeholder="Ketik nama masjid (Contoh: Masjid Raya)..."
+                               value={searchQuery}
+                               onChange={(e) => setSearchQuery(e.target.value)}
+                               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                             />
+                             <button onClick={() => handleSearch()} className="absolute right-2 top-2 bottom-2 bg-emerald-500 text-white px-6 rounded-full font-bold hover:bg-emerald-600 transition-colors shadow-md">Cari</button>
+                          </div>
+
+                          {/* Quick Suggestion Buttons */}
+                          <div className="flex flex-wrap justify-center gap-2 mb-8">
+                             <span className="text-sm text-slate-400 w-full mb-1">Atau lihat simulasi:</span>
+                             {['Masjid Amanah', 'Masjid Raya Kota', 'Masjid Al-Ikhlas', 'Musholla Al-Hidayah'].map((name) => (
+                                <button 
+                                  key={name}
+                                  onClick={() => handleSearch(name)}
+                                  className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-full text-sm hover:border-emerald-400 hover:text-emerald-600 transition-all shadow-sm"
+                                >
+                                  {name}
+                                </button>
+                             ))}
+                          </div>
+                          
+                          <div className="mt-4 flex gap-6 text-slate-400 text-sm">
+                             <div className="flex items-center gap-1"><ShieldCheck size={16}/> Terverifikasi</div>
+                             <div className="flex items-center gap-1"><FileText size={16}/> Standar ISAK 35</div>
+                          </div>
+                       </div>
+                    ) : (
+                       <div className="max-w-5xl mx-auto p-6 space-y-8 animate-in slide-in-from-bottom-4">
+                          {/* Profile Header */}
+                          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                             <div className="h-32 bg-gradient-to-r from-emerald-500 to-teal-600 relative">
+                                <div className="absolute -bottom-10 left-8 p-1 bg-white rounded-xl shadow-md">
+                                   <div className="w-20 h-20 bg-slate-100 rounded-lg flex items-center justify-center text-emerald-500"><Landmark size={40}/></div>
+                                </div>
+                             </div>
+                             <div className="pt-12 px-8 pb-8">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                   <div>
+                                      <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">{selectedMosqueName} <ShieldCheck size={20} className="text-blue-500" fill="currentColor" color="white"/></h1>
+                                      <div className="flex items-center gap-2 text-slate-500 text-sm mt-1"><MapPin size={14}/> Jl. Contoh Alamat No. 123, Kota Sejahtera</div>
+                                   </div>
+                                   <div className="flex gap-3">
+                                      <button className="px-4 py-2 text-slate-600 font-medium border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-sm">
+                                         Hubungi Pengurus
+                                      </button>
+                                      <button className="bg-emerald-500 text-white px-6 py-2 rounded-lg font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-transform active:scale-95 flex items-center gap-2">
+                                         <HeartHandshake size={18}/> Donasi Online
+                                      </button>
+                                   </div>
+                                </div>
+                             </div>
+                          </div>
+
+                          {/* Quick Stats Grid */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                             <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-4 opacity-10"><Wallet size={64} className="text-emerald-500"/></div>
+                                <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Saldo Kas Saat Ini</span>
+                                <div className="text-3xl font-bold text-slate-800 mt-2">{formatCurrency(stats.totalAssets)}</div>
+                                <div className="text-xs text-emerald-600 bg-emerald-50 inline-block px-2 py-1 rounded mt-2 font-medium border border-emerald-100">● Live Update</div>
+                             </div>
+                             <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-4 opacity-10"><Briefcase size={64} className="text-violet-500"/></div>
+                                <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Penyaluran Program (Bulan Ini)</span>
+                                <div className="text-3xl font-bold text-violet-600 mt-2">{formatCurrency(stats.expenseStats.program)}</div>
+                                <div className="text-xs text-slate-400 mt-2">Dana kembali ke umat</div>
+                             </div>
+                             <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-4 opacity-10"><TrendingUp size={64} className="text-blue-500"/></div>
+                                <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Penerimaan Infaq (Bulan Ini)</span>
+                                <div className="text-3xl font-bold text-blue-600 mt-2">{formatCurrency(stats.monthlyIncome)}</div>
+                                <div className="text-xs text-slate-400 mt-2">Total donasi masuk</div>
+                             </div>
+                          </div>
+
+                          {/* Charts Section */}
+                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                             <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+                                <div className="flex justify-between items-center mb-6">
+                                   <h3 className="font-bold text-slate-800">Tren Keuangan (6 Bulan Terakhir)</h3>
+                                   <select className="text-xs border rounded p-1 bg-slate-50"><option>6 Bulan</option><option>1 Tahun</option></select>
+                                </div>
+                                <div className="h-72">
+                                   <ResponsiveContainer width="100%" height="100%">
+                                      <AreaChart data={stats.chartData.slice(-6)} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                         <defs>
+                                            <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#10B981" stopOpacity={0.1}/><stop offset="95%" stopColor="#10B981" stopOpacity={0}/></linearGradient>
+                                            <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#EF4444" stopOpacity={0.1}/><stop offset="95%" stopColor="#EF4444" stopOpacity={0}/></linearGradient>
+                                         </defs>
+                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9"/>
+                                         <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} tick={{fill: '#94a3b8'}} dy={10} />
+                                         <YAxis fontSize={12} tickLine={false} axisLine={false} tick={{fill: '#94a3b8'}} tickFormatter={(v)=>`${v/1000}k`}/>
+                                         <Tooltip formatter={(v:any)=>formatCurrency(v)} contentStyle={{borderRadius:'8px', border:'none', boxShadow:'0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                                         <Area type="monotone" dataKey="income" stroke="#10B981" strokeWidth={2} fillOpacity={1} fill="url(#colorIncome)" name="Pemasukan"/>
+                                         <Area type="monotone" dataKey="expense" stroke="#EF4444" strokeWidth={2} fillOpacity={1} fill="url(#colorExpense)" name="Pengeluaran"/>
+                                      </AreaChart>
+                                   </ResponsiveContainer>
+                                </div>
+                             </div>
+                             
+                             <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex flex-col">
+                                <h3 className="font-bold text-slate-800 mb-2">Efisiensi Dana Umat</h3>
+                                <p className="text-xs text-slate-400 mb-6">Perbandingan dana yang disalurkan untuk program vs operasional.</p>
+                                <div className="h-48 flex-1">
+                                   <ResponsiveContainer width="100%" height="100%">
+                                      <PieChart>
+                                         <Pie data={[{name: 'Program Umat', value: stats.expenseStats.program}, {name: 'Operasional', value: stats.expenseStats.management}]} innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value">
+                                            <Cell fill={COLORS.program} />
+                                            <Cell fill={COLORS.management} />
+                                         </Pie>
+                                         <Tooltip formatter={(v:any)=>formatCurrency(v)} />
+                                         <Legend verticalAlign="bottom" height={36} iconType="circle"/>
+                                      </PieChart>
+                                   </ResponsiveContainer>
+                                </div>
+                                <div className="bg-slate-50 p-3 rounded-lg text-xs text-slate-500 text-center mt-2 border border-slate-200">
+                                   <strong>{((stats.expenseStats.program / (stats.expenseStats.total || 1)) * 100).toFixed(0)}%</strong> dana disalurkan langsung untuk program kemaslahatan umat.
+                                </div>
+                             </div>
+                          </div>
+                          
+                          {/* Financial Report Preview (Simpler version for Public Portal) */}
+                          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+                             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                                <h3 className="font-bold text-slate-800">Laporan Transaksi Terakhir</h3>
+                                <button className="text-emerald-600 text-sm font-medium hover:underline">Lihat Selengkapnya</button>
+                             </div>
+                             <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                   <thead className="bg-slate-50 text-slate-500 uppercase text-xs">
+                                      <tr><th className="px-6 py-4">Tanggal</th><th className="px-6 py-4">Kategori</th><th className="px-6 py-4 text-right">Masuk</th><th className="px-6 py-4 text-right">Keluar</th></tr>
+                                   </thead>
+                                   <tbody className="divide-y divide-slate-100">
+                                      {transactions.slice(0, 5).map(t => (
+                                         <tr key={t.id} className="hover:bg-slate-50">
+                                            <td className="px-6 py-4 text-slate-500">{formatDate(t.date)}</td>
+                                            <td className="px-6 py-4 font-medium text-slate-700">{t.category}</td>
+                                            <td className="px-6 py-4 text-right text-emerald-600 font-medium">{t.type === 'income' ? formatCurrency(t.amount) : '-'}</td>
+                                            <td className="px-6 py-4 text-right text-red-500 font-medium">{t.type === 'expense' ? formatCurrency(t.amount) : '-'}</td>
+                                         </tr>
+                                      ))}
+                                   </tbody>
+                                </table>
+                             </div>
+                          </div>
+
+                       </div>
+                    )}
+                 </div>
+              )}
+
+              {/* Settings Tab Placeholder */}
+              {activeTab === 'settings' && (
+                  <div className="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                      <h2 className="text-xl font-bold mb-6 flex items-center gap-2"><Settings className="text-emerald-500"/> Pengaturan Masjid</h2>
+                      <div className="space-y-4">
+                          <div>
+                              <label className="block text-sm font-bold mb-2">Nama Masjid</label>
+                              <input type="text" className="w-full p-3 border rounded-lg" value={mosqueProfile.name} onChange={(e) => setMosqueProfile({...mosqueProfile, name: e.target.value})} />
+                          </div>
+                          <div>
+                              <label className="block text-sm font-bold mb-2">Alamat Lengkap</label>
+                              <input type="text" className="w-full p-3 border rounded-lg" value={mosqueProfile.address} onChange={(e) => setMosqueProfile({...mosqueProfile, address: e.target.value})} />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                  <label className="block text-sm font-bold mb-2">Kota / Kabupaten</label>
+                                  <input type="text" className="w-full p-3 border rounded-lg" value={mosqueProfile.city} onChange={(e) => setMosqueProfile({...mosqueProfile, city: e.target.value})} />
+                              </div>
+                              <div>
+                                  <label className="block text-sm font-bold mb-2">Nomor Telepon</label>
+                                  <input type="text" className="w-full p-3 border rounded-lg" value={mosqueProfile.phone} onChange={(e) => setMosqueProfile({...mosqueProfile, phone: e.target.value})} />
+                              </div>
+                          </div>
+                          <button className="bg-slate-900 text-white px-6 py-3 rounded-lg font-bold w-full hover:bg-slate-800 transition-colors mt-4" onClick={() => showToast("Profil berhasil disimpan!", "success")}>Simpan Perubahan</button>
+                      </div>
+                  </div>
+              )}
+            </>
+          )}
+        </div>
+        
+        {/* Detail Modal */}
+        {isDetailModalOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+             <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold">Detail Data Grafik</h3>
+                  <button onClick={() => setIsDetailModalOpen(false)}><X size={20}/></button>
+                </div>
+                <div className="max-h-[60vh] overflow-auto">
+                   <table className="w-full text-sm">
+                     <thead className="bg-slate-50 sticky top-0">
+                       <tr><th className="p-2 text-left">Periode</th><th className="p-2 text-right">Nilai</th></tr>
+                     </thead>
+                     <tbody className="divide-y">
+                       {stats.chartData.map((d: any) => (
+                         <tr key={d.name}>
+                           <td className="p-2 font-medium">{d.name}</td>
+                           <td className="p-2 text-right">
+                              <div className="text-emerald-600">Masuk: {formatCurrency(d.income)}</div>
+                              <div className="text-red-600">Keluar: {formatCurrency(d.expense)}</div>
+                           </td>
+                         </tr>
+                       ))}
+                     </tbody>
+                   </table>
+                </div>
+             </div>
+          </div>
+        )}
+        
+        {/* Category Detail Modal */}
+        {viewCategoryDetail && (
+           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[80vh] flex flex-col">
+                 <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                    <h3 className="font-bold text-lg text-slate-800">Detail Transaksi: {viewCategoryDetail}</h3>
+                    <button onClick={() => setViewCategoryDetail(null)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
+                 </div>
+                 <div className="overflow-auto p-4">
+                    <table className="w-full text-sm text-left">
+                       <thead className="bg-slate-50 text-slate-600 sticky top-0">
+                          <tr><th className="px-4 py-3">Tanggal</th><th className="px-4 py-3">Keterangan</th><th className="px-4 py-3 text-right">Nominal</th></tr>
+                       </thead>
+                       <tbody className="divide-y divide-slate-100">
+                          {(() => {
+                             const details = categoryDetailData;
+                             if (details.length === 0) return <tr><td colSpan={3} className="p-4 text-center text-slate-400">Tidak ada data.</td></tr>;
+                             return details.map(t => (
+                                <tr key={t.id}>
+                                   <td className="px-4 py-3 text-slate-500">{formatDate(t.date)}</td>
+                                   <td className="px-4 py-3 font-medium text-slate-700">{t.description}</td>
+                                   <td className={`px-4 py-3 text-right font-bold ${t.type==='income'?'text-emerald-600':'text-red-600'}`}>{formatCurrency(t.amount)}</td>
+                                </tr>
+                             ));
+                          })()}
+                       </tbody>
+                    </table>
+                 </div>
+              </div>
+           </div>
+        )}
+
+      </main>
+    </div>
+  );
+}
