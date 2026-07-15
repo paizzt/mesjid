@@ -291,7 +291,7 @@ const TabunganQurban: React.FC = () => {
 
       {/* Modal Tabungan */}
       {isTabunganModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-slate-900/20  flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center">
               <h2 className="text-lg font-bold text-slate-800">{editingTabunganId ? 'Edit Tabungan' : 'Daftar Peserta Baru'}</h2>
@@ -331,7 +331,7 @@ const TabunganQurban: React.FC = () => {
 
       {/* Modal Setoran */}
       {isSetoranModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-slate-900/20  flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center">
               <h2 className="text-lg font-bold text-slate-800">Catat Setoran Baru</h2>

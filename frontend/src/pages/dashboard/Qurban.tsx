@@ -310,7 +310,7 @@ const Qurban: React.FC = () => {
 
       {/* Modal Hewan */}
       {isHewanModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-slate-900/20  flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center">
               <h2 className="text-lg font-bold text-slate-800">{editingHewanId ? 'Edit Hewan' : 'Tambah Hewan Qurban'}</h2>
@@ -355,7 +355,7 @@ const Qurban: React.FC = () => {
 
       {/* Modal Peserta */}
       {isPesertaModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-slate-900/20  flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center">
               <h2 className="text-lg font-bold text-slate-800">Tambah Peserta Qurban</h2>

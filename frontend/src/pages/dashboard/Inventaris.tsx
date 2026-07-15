@@ -217,7 +217,7 @@ const Inventaris: React.FC = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-slate-900/20  flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-lg w-full">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
               <h2 className="text-xl font-bold text-slate-800">{editingId ? 'Edit Inventaris' : 'Tambah Barang Inventaris'}</h2>

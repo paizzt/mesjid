@@ -56,7 +56,7 @@ const JadwalShalat: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="bg-emerald-600 rounded-2xl p-6 md:p-8 text-white shadow-lg relative overflow-hidden">
+      <div className="bg-emerald-600 rounded-2xl p-6 md:p-8 text-white shadow-sm relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-10">
           <Clock className="w-32 h-32" />
         </div>

@@ -11,22 +11,18 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
+      includeAssets: ['logo.png'],
       manifest: {
-        name: 'SIM Masjid - DKM Digital',
-        short_name: 'DKM Digital',
+        name: 'SIMAD - SIM Masjid',
+        short_name: 'SIMAD',
         description: 'Sistem Informasi Manajemen Masjid',
         theme_color: '#047857',
         icons: [
           {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
+            src: 'logo.png',
+            sizes: '512x512 192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       },
@@ -38,7 +34,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:4000',
+        target: 'http://localhost:3000',
         changeOrigin: true,
       }
     }

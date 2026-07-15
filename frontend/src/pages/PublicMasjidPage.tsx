@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Building2, Clock, Wallet, BookOpen, Sun, Sunset, Moon, CloudSun, Megaphone, Bell, ArrowLeft } from 'lucide-react';
+import { Building2, Clock, Wallet, BookOpen, Sun, Sunset, Moon, CloudSun, Megaphone, Bell, ArrowLeft, MapPin, Phone, Mail } from 'lucide-react';
 import api from '../services/api';
 
 type PrayerTimes = {
@@ -302,7 +302,7 @@ export default function PublicMasjidPage() {
               {Object.entries(prayerTimes).map(([name, time]) => (
                 <div
                   key={name}
-                  className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100"
+                  className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100 shadow-sm"
                 >
                   <div className="flex items-center gap-3">
                     {getPrayerIcon(name)}
@@ -329,8 +329,8 @@ export default function PublicMasjidPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100">
-                <p className="text-gray-900 leading-relaxed text-lg">{hadith.id}</p>
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
+                <p className="text-slate-800 leading-relaxed text-lg">{hadith.id}</p>
               </div>
               <p className="text-sm text-gray-600 italic text-center">— {hadith.narrator} —</p>
             </div>
@@ -343,8 +343,8 @@ export default function PublicMasjidPage() {
       title: 'Saldo Kas Masjid',
       content: (
         <div className="space-y-2">
-          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl text-white p-4">
-            <p className="text-xs opacity-90 mb-1">Total Saldo</p>
+          <div className="bg-emerald-600 rounded-xl text-white p-4 shadow-sm">
+            <p className="text-xs text-emerald-50 mb-1">Total Saldo</p>
             <p className="text-3xl font-bold">Rp {saldoKas.toLocaleString('id-ID')}</p>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -376,7 +376,7 @@ export default function PublicMasjidPage() {
               allowFullScreen
             ></iframe>
           </div>
-          <p className="text-xs text-gray-600 text-center">🕋 Streaming langsung dari Masjidil Haram, Mekah</p>
+          <p className="text-xs text-slate-500 text-center">Streaming langsung dari Masjidil Haram</p>
         </div>
       )
     },
@@ -384,10 +384,10 @@ export default function PublicMasjidPage() {
       key: 'info',
       title: 'Informasi Kontak',
       content: (
-        <div className="space-y-1 text-sm text-gray-700">
-          <p>📍 {masjidInfo?.alamat}</p>
-          {masjidInfo?.telepon && <p>📞 {masjidInfo.telepon}</p>}
-          {masjidInfo?.email && <p>📧 {masjidInfo.email}</p>}
+        <div className="space-y-2 text-sm text-slate-600">
+          <p className="flex items-center gap-2"><MapPin className="w-4 h-4 text-emerald-600" /> {masjidInfo?.alamat}</p>
+          {masjidInfo?.telepon && <p className="flex items-center gap-2"><Phone className="w-4 h-4 text-emerald-600" /> {masjidInfo.telepon}</p>}
+          {masjidInfo?.email && <p className="flex items-center gap-2"><Mail className="w-4 h-4 text-emerald-600" /> {masjidInfo.email}</p>}
         </div>
       )
     }
@@ -403,7 +403,7 @@ export default function PublicMasjidPage() {
 
   if (!masjidInfo) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Memuat informasi masjid...</p>
@@ -413,7 +413,7 @@ export default function PublicMasjidPage() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header with Back Button */}
       <div className="bg-white shadow-sm p-4 flex items-center justify-between">
         <Link 
@@ -430,7 +430,7 @@ export default function PublicMasjidPage() {
       </div>
 
       {/* Scrolling Announcements */}
-      <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white py-2 px-4 overflow-hidden">
+      <div className="bg-emerald-600 text-white py-2 px-4 overflow-hidden">
         <div className="flex items-center gap-2">
           <Megaphone className="w-4 h-4 flex-shrink-0" />
           <div className="overflow-hidden">
@@ -446,9 +446,9 @@ export default function PublicMasjidPage() {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden p-4">
+      <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full">
         {/* Current Time & Date */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 text-center">
+        <div className="bg-white rounded-2xl shadow-sm p-6 mb-4 text-center">
           <div className="flex items-center justify-center gap-3 mb-3">
             <Clock className="w-8 h-8 text-blue-600" />
             <h2 className="text-5xl font-bold text-gray-800">
@@ -463,7 +463,7 @@ export default function PublicMasjidPage() {
               ref={startButtonRef}
               onClick={startIqomahCountdown}
               disabled={loading || !prayerTimes}
-              className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white px-6 py-3 rounded-lg font-medium transition-all inline-flex items-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Bell className="w-5 h-5" />
               Mulai Countdown Iqomah
@@ -473,7 +473,7 @@ export default function PublicMasjidPage() {
 
         {/* Iqomah Countdown Banner */}
         {isCountingDown && iqomahCountdown !== null && (
-          <div className="bg-gradient-to-r from-red-600 to-orange-600 rounded-2xl shadow-lg p-6 mb-4 text-white animate-pulse">
+          <div className="bg-emerald-600 rounded-2xl shadow-sm p-6 mb-4 text-white animate-pulse">
             <div className="text-center">
               <div className="flex items-center justify-center gap-3 mb-3">
                 <Bell className="w-8 h-8" />
@@ -486,7 +486,7 @@ export default function PublicMasjidPage() {
               <button
                 ref={stopButtonRef}
                 onClick={() => setIsCountingDown(false)}
-                className="mt-4 bg-white text-red-600 px-6 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                className="mt-4 bg-white text-emerald-700 px-6 py-2 rounded-lg font-medium hover:bg-emerald-50 transition-colors"
               >
                 Hentikan Hitung Mundur
               </button>
@@ -496,7 +496,7 @@ export default function PublicMasjidPage() {
 
         {/* Mobile Carousel */}
         <div className="md:hidden mb-4">
-          <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
+          <div className="bg-white rounded-2xl shadow-sm p-4 border border-gray-100">
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-xs text-gray-500">Geser untuk lihat info</p>
@@ -526,18 +526,18 @@ export default function PublicMasjidPage() {
               <button
                 key={slide.key}
                 onClick={() => setCurrentSlide(idx)}
-                className={`w-2.5 h-2.5 rounded-full ${idx === currentSlide ? 'bg-blue-600' : 'bg-gray-300'}`}
+                className={`w-2.5 h-2.5 rounded-full ${idx === currentSlide ? 'bg-emerald-600' : 'bg-slate-300'}`}
                 aria-label={`Slide ${idx + 1}`}
               ></button>
             ))}
           </div>
         </div>
 
-        <div className="hidden md:grid grid-cols-12 gap-4 h-[calc(100%-250px)]">
+        <div className="hidden md:grid grid-cols-12 gap-6">
           {/* Left Column - Prayer Times & Hadith */}
           <div className="col-span-8 flex flex-col gap-4">
             {/* Prayer Times Card */}
-            <div className="bg-white rounded-xl shadow-lg p-4 flex-shrink-0">
+            <div className="bg-white rounded-xl shadow-sm p-4 flex-shrink-0">
               <div className="flex items-center gap-2 mb-4">
                 <Clock className="w-5 h-5 text-blue-600" />
                 <h3 className="text-xl font-bold text-gray-800">Jadwal Sholat</h3>
@@ -551,7 +551,7 @@ export default function PublicMasjidPage() {
                   {Object.entries(prayerTimes).map(([name, time]) => (
                     <div
                       key={name}
-                      className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 hover:shadow-md transition-shadow"
+                      className="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-100 shadow-sm hover:border-emerald-200 transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         {getPrayerIcon(name)}
@@ -569,7 +569,7 @@ export default function PublicMasjidPage() {
             </div>
 
             {/* Hadith Card */}
-            <div className="bg-white rounded-xl shadow-lg p-4 flex-1 min-h-0 flex flex-col">
+            <div className="bg-white rounded-xl shadow-sm p-4 flex-1 min-h-0 flex flex-col">
               <div className="flex items-center gap-2 mb-4 flex-shrink-0">
                 <BookOpen className="w-5 h-5 text-purple-600" />
                 <h3 className="text-lg font-bold text-gray-800">Hadits Hari Ini</h3>
@@ -580,8 +580,8 @@ export default function PublicMasjidPage() {
                 </div>
               ) : (
                 <div className="flex-1 min-h-0 overflow-y-auto">
-                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100 mb-3">
-                    <p className="text-gray-900 leading-relaxed text-lg">{hadith.id}</p>
+                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-100 mb-3">
+                    <p className="text-slate-800 leading-relaxed text-lg">{hadith.id}</p>
                   </div>
                   <p className="text-sm text-gray-600 italic text-center">— {hadith.narrator} —</p>
                 </div>
@@ -592,7 +592,7 @@ export default function PublicMasjidPage() {
           {/* Right Column - Balance, Streaming & Info */}
           <div className="col-span-4 flex flex-col gap-4">
             {/* Saldo Kas Card */}
-            <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg p-4 text-white flex-shrink-0">
+            <div className="bg-emerald-600 rounded-xl shadow-sm p-4 text-white flex-shrink-0">
               <div className="flex items-center gap-2 mb-3">
                 <Wallet className="w-5 h-5" />
                 <h3 className="text-lg font-bold">Saldo Kas Masjid</h3>
@@ -619,7 +619,7 @@ export default function PublicMasjidPage() {
             </div>
 
             {/* Live Streaming */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden flex-1 flex flex-col">
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden flex-1 flex flex-col">
               <div className="p-3 border-b border-gray-200 flex-shrink-0">
                 <div className="flex items-center gap-2">
                   <Building2 className="w-5 h-5 text-blue-600" />

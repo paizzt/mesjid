@@ -65,11 +65,11 @@ const Register: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-6 md:p-8">
         <div className="text-center mb-6 md:mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-emerald-100 rounded-full mb-3 md:mb-4">
-            <Mosque className="w-7 h-7 md:w-8 md:h-8 text-emerald-600" />
+          <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-2xl overflow-hidden bg-white shadow-md border border-slate-100 shrink-0">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover scale-[1.8]" />
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Registrasi SIM Masjid</h1>
-          <p className="text-sm md:text-base text-gray-600">Lengkapi data diri dan informasi masjid Anda</p>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 mb-2 tracking-tight">Registrasi SIMAD</h1>
+          <p className="text-sm md:text-base text-slate-500">Lengkapi data diri dan informasi masjid Anda</p>
         </div>
 
         {error && (

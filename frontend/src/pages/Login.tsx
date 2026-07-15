@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Building as Mosque, User, Lock, Loader2 } from 'lucide-react';
+import { User, Lock, Loader2, ArrowLeft } from 'lucide-react';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -34,13 +34,21 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 md:p-8">
-        <div className="text-center mb-6 md:mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-emerald-100 rounded-full mb-3 md:mb-4">
-            <Mosque className="w-7 h-7 md:w-8 md:h-8 text-emerald-600" />
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 md:p-8 relative">
+        <button 
+          onClick={() => navigate('/transparansi')}
+          className="absolute top-4 left-4 md:top-6 md:left-6 text-gray-400 hover:text-emerald-600 transition-colors flex items-center gap-1 text-sm font-medium"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="hidden sm:inline">Kembali</span>
+        </button>
+
+        <div className="text-center mb-6 md:mb-8 pt-6 sm:pt-0">
+          <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-2xl overflow-hidden bg-white shadow-md border border-slate-100 shrink-0">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover scale-[1.8]" />
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">SIM Masjid</h1>
-          <p className="text-sm md:text-base text-gray-600">Sistem Informasi Manajemen Masjid</p>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 mb-2 tracking-tight">SIMAD</h1>
+          <p className="text-sm md:text-base text-slate-500">Sistem Informasi Manajemen Masjid</p>
         </div>
 
         {error && (
@@ -100,13 +108,10 @@ const Login: React.FC = () => {
 
         <div className="mt-4 md:mt-6 text-center">
           <p className="text-sm md:text-base text-gray-600">
-            Belum punya akun?{' '}
-            <button
-              onClick={() => navigate('/register')}
-              className="text-emerald-600 font-semibold hover:text-emerald-700"
-            >
+            <span className="text-sm text-slate-600">Belum punya akun?</span>
+            <a href="/register" className="ml-1 text-sm font-semibold text-emerald-600 hover:text-emerald-700">
               Daftar sekarang
-            </button>
+            </a>
           </p>
         </div>
 

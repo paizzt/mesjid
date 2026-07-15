@@ -197,7 +197,7 @@ const PublicKasPage = () => {
                   <MapPin className="w-4 h-4" /> {masjid.alamat}
                 </p>
                 <span className="inline-block mt-2 text-xs bg-slate-100 px-3 py-1 rounded-full text-slate-600">
-                  Transparansi Publik - Standar ISAK 35
+                  Transparansi Publik
                 </span>
               </div>
             </div>
@@ -236,13 +236,13 @@ const PublicKasPage = () => {
             {/* Main Statistics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {cards.map((c, idx) => (
-                <div key={idx} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                  <div className={`absolute top-0 right-0 p-4 opacity-10`}>
-                    <c.icon className="w-20 h-20" />
+                <div key={idx} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+                  <div className="flex items-start justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{c.title}</h3>
+                    <c.icon className={`w-5 h-5 ${c.tone}`} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">{c.title}</h3>
-                    <p className="text-xs text-slate-400 mb-3">{c.subtitle}</p>
+                    <p className="text-xs text-slate-400 mb-2 font-medium">{c.subtitle}</p>
                     <div className={`text-2xl font-bold text-slate-900`}>{c.value}</div>
                   </div>
                 </div>

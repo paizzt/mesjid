@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CustomSelect } from '../../components/CustomSelect';
 import { masjidAPI, zakatAPI } from '../../services/api';
-import { Plus, Edit2, Trash2, Loader2, Target, DollarSign, Package, Users } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, Target, Package, Users } from 'lucide-react';
 
 const Zakat: React.FC = () => {
   const [masjidList, setMasjidList] = useState<any[]>([]);
@@ -202,8 +202,8 @@ const Zakat: React.FC = () => {
         </div>
         
         <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-sm flex items-start gap-4">
-          <div className="p-3 bg-blue-100 rounded-lg text-blue-600">
-            <DollarSign size={24} />
+          <div className="p-3 bg-blue-100 rounded-lg text-blue-600 flex items-center justify-center w-12 h-12">
+            <span className="font-bold text-lg">Rp</span>
           </div>
           <div>
             <p className="text-sm font-semibold text-blue-800">Zakat Fitrah (Uang)</p>
@@ -222,8 +222,8 @@ const Zakat: React.FC = () => {
         </div>
 
         <div className="bg-purple-50 p-4 rounded-xl border border-purple-100 shadow-sm flex items-start gap-4">
-          <div className="p-3 bg-purple-100 rounded-lg text-purple-600">
-            <DollarSign size={24} />
+          <div className="p-3 bg-purple-100 rounded-lg text-purple-600 flex items-center justify-center w-12 h-12">
+            <span className="font-bold text-lg">Rp</span>
           </div>
           <div>
             <p className="text-sm font-semibold text-purple-800">Zakat Mal</p>
@@ -305,7 +305,7 @@ const Zakat: React.FC = () => {
 
       {/* Modal Form */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-slate-900/20  flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
               <h2 className="text-xl font-bold text-slate-800">

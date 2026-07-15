@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 const startServer = async () => {
     try {
         await db.sequelize.authenticate();
-        console.log('Connection to PostgreSQL has been established successfully.');
+        console.log('Connection to SQLite has been established successfully.');
         
         // Sync database automatically for SQLite
         await db.sequelize.sync({ force: false });

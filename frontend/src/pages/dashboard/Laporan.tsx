@@ -113,12 +113,12 @@ const Laporan: React.FC = () => {
               <FileText className="text-emerald-500" /> Laporan Keuangan
             </h2>
             <p className="text-xs md:text-sm text-slate-500 mt-1">
-              Pilih periode laporan untuk dicetak atau disimpan sebagai PDF (ISAK 35)
+              Pilih periode laporan untuk dicetak atau disimpan sebagai PDF
             </p>
           </div>
           <button
             onClick={handlePrint}
-            className="w-full md:w-auto flex items-center justify-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-lg hover:bg-slate-800 font-bold shadow-lg transition-all active:scale-95 text-sm md:text-base"
+            className="w-full md:w-auto flex items-center justify-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-lg hover:bg-slate-800 font-bold shadow-sm transition-all active:scale-95 text-sm md:text-base"
           >
             <Printer size={20} /> Cetak / Simpan PDF
           </button>
@@ -252,7 +252,7 @@ const Laporan: React.FC = () => {
       <div
         id="printable-report"
         ref={printableRef}
-        className="bg-white p-6 md:p-8 lg:p-12 shadow-lg border border-slate-200 mx-auto max-w-[210mm] print:shadow-none print:border-0 print:p-0 print:max-w-none print:w-full"
+        className="bg-white p-6 md:p-8 lg:p-12 shadow-sm border border-slate-200 mx-auto max-w-[210mm] print:shadow-none print:border-0 print:p-0 print:max-w-none print:w-full"
       >
         {/* Header */}
         <div className="text-center border-b-2 border-slate-800 pb-6 mb-8">
@@ -265,7 +265,7 @@ const Laporan: React.FC = () => {
         {/* Report Title */}
         <div className="text-center mb-8">
           <h2 className="text-lg md:text-xl font-bold text-slate-800 uppercase underline decoration-2 underline-offset-4">
-            Laporan Keuangan {reportViewMode === 'public' ? 'Ringkas' : 'Lengkap'} (ISAK 35)
+            Laporan Keuangan {reportViewMode === 'public' ? 'Ringkas' : 'Lengkap'}
           </h2>
           <p className="text-slate-600 mt-2 font-medium text-sm md:text-base">Periode: {reportData.periode.title}</p>
         </div>
@@ -273,7 +273,7 @@ const Laporan: React.FC = () => {
         {/* A. Laporan Penghasilan Komprehensif */}
         <div className="mb-8">
           <h3 className="font-bold text-slate-700 mb-2 uppercase text-xs md:text-sm border-l-4 border-slate-800 pl-2">
-            A. Laporan Penghasilan Komprehensif
+            Laporan Penghasilan Komprehensif
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-xs md:text-sm border-collapse border border-slate-300">
@@ -390,7 +390,7 @@ const Laporan: React.FC = () => {
         {/* B. Perubahan Aset Neto */}
         <div className="mb-12">
           <h3 className="font-bold text-slate-700 mb-2 uppercase text-xs md:text-sm border-l-4 border-slate-800 pl-2">
-            B. Perubahan Aset Neto
+            Perubahan Aset Neto
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-xs md:text-sm border-collapse border border-slate-300">
@@ -435,11 +435,11 @@ const Laporan: React.FC = () => {
         {/* C & D - Only for Admin Mode */}
         {reportViewMode === 'admin' && (
           <>
-            {/* C. Laporan Aset Terbatas */}
+            {/* Laporan Aset Terbatas */}
             {reportData.laporanTerbatas && reportData.laporanTerbatas.length > 0 && (
               <div className="mb-12">
                 <h3 className="font-bold text-slate-700 mb-2 uppercase text-xs md:text-sm border-l-4 border-slate-800 pl-2">
-                  C. Rincian Dana Terbatas
+                  Rincian Dana Terbatas
                 </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs md:text-sm border-collapse border border-slate-300">

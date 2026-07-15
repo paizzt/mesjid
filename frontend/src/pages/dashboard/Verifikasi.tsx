@@ -159,7 +159,7 @@ const Verifikasi: React.FC = () => {
 
       {/* Modal */}
       {showModal && selectedUser && (
-        <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-slate-900/20  flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
               {verifikasiType === 'approved' ? 'Setujui' : 'Tolak'} User

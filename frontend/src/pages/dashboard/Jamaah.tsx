@@ -225,7 +225,7 @@ const Jamaah: React.FC = () => {
 
       {/* Modal Form */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-slate-900/20  flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
               <h2 className="text-xl font-bold text-slate-800">

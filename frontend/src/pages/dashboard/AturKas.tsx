@@ -189,8 +189,8 @@ const AturKas: React.FC = () => {
 
       {/* Modal Add/Edit */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full">
+        <div className="fixed inset-0 bg-slate-900/20  flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-sm p-6 max-w-md w-full">
             <h2 className="text-xl font-bold mb-4">{formData.id ? 'Edit Akun' : 'Tambah Akun Kas'}</h2>
             <form onSubmit={handleSaveKas} className="space-y-4">
               <div>
@@ -227,8 +227,8 @@ const AturKas: React.FC = () => {
 
       {/* Modal Transfer */}
       {showTransfer && (
-        <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full">
+        <div className="fixed inset-0 bg-slate-900/20  flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-sm p-6 max-w-md w-full">
             <h2 className="text-xl font-bold mb-4">Transfer Antar Kas</h2>
             <form onSubmit={handleTransfer} className="space-y-4">
               <div>

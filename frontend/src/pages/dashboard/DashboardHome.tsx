@@ -360,7 +360,7 @@ const DashboardHome: React.FC = () => {
               href={`/masjid/${selectedMasjid}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 shadow-sm transition-colors"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-white text-emerald-700 border border-emerald-200 rounded-lg text-sm font-medium hover:bg-emerald-50 shadow-sm transition-colors"
             >
               <Building className="w-4 h-4" />
               Lihat Halaman Publik
@@ -432,23 +432,23 @@ const DashboardHome: React.FC = () => {
             <p className="text-emerald-100 text-sm">Menampilkan jadwal shalat otomatis untuk lokasi masjid</p>
           </div>
           <div className="grid grid-cols-5 gap-2 md:gap-4 text-center">
-            <div className="bg-emerald-700/50 p-2 md:p-3 rounded-lg backdrop-blur-sm border border-emerald-500/30">
+            <div className="bg-emerald-700/50 p-2 md:p-3 rounded-lg  border border-emerald-500/30">
               <p className="text-[10px] md:text-xs text-emerald-100 uppercase font-semibold mb-1">Subuh</p>
               <p className="font-bold text-sm md:text-base">04:30</p>
             </div>
-            <div className="bg-emerald-700/50 p-2 md:p-3 rounded-lg backdrop-blur-sm border border-emerald-500/30">
+            <div className="bg-emerald-700/50 p-2 md:p-3 rounded-lg  border border-emerald-500/30">
               <p className="text-[10px] md:text-xs text-emerald-100 uppercase font-semibold mb-1">Dzuhur</p>
               <p className="font-bold text-sm md:text-base">12:00</p>
             </div>
-            <div className="bg-emerald-700/50 p-2 md:p-3 rounded-lg backdrop-blur-sm border border-emerald-500/30">
+            <div className="bg-emerald-700/50 p-2 md:p-3 rounded-lg  border border-emerald-500/30">
               <p className="text-[10px] md:text-xs text-emerald-100 uppercase font-semibold mb-1">Ashar</p>
               <p className="font-bold text-sm md:text-base">15:15</p>
             </div>
-            <div className="bg-emerald-700/50 p-2 md:p-3 rounded-lg backdrop-blur-sm border border-emerald-500/30 bg-emerald-500">
+            <div className="bg-emerald-700/50 p-2 md:p-3 rounded-lg  border border-emerald-500/30 bg-emerald-500">
               <p className="text-[10px] md:text-xs text-emerald-50 uppercase font-semibold mb-1">Maghrib</p>
               <p className="font-bold text-sm md:text-base">18:05</p>
             </div>
-            <div className="bg-emerald-700/50 p-2 md:p-3 rounded-lg backdrop-blur-sm border border-emerald-500/30">
+            <div className="bg-emerald-700/50 p-2 md:p-3 rounded-lg  border border-emerald-500/30">
               <p className="text-[10px] md:text-xs text-emerald-100 uppercase font-semibold mb-1">Isya</p>
               <p className="font-bold text-sm md:text-base">19:15</p>
             </div>
@@ -459,50 +459,50 @@ const DashboardHome: React.FC = () => {
       {/* Stats Cards */}
       {saldoTidakTerbatas && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              <TrendingUp className="w-20 h-20 text-emerald-600" />
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+            <div className="flex items-start justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Surplus / Defisit</h3>
+              <TrendingUp className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Surplus / Defisit</h3>
-              <p className="text-xs text-slate-400 mb-3">Kinerja Periode Ini</p>
+              <p className="text-xs text-slate-400 mb-2 font-medium">Kinerja Periode Ini</p>
               <div className={`text-2xl font-bold ${(saldoTidakTerbatas.pemasukan - saldoTidakTerbatas.pengeluaran) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                 {(saldoTidakTerbatas.pemasukan - saldoTidakTerbatas.pengeluaran) >= 0 ? '+' : ''}{formatCurrency(saldoTidakTerbatas.pemasukan - saldoTidakTerbatas.pengeluaran)}
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              <Wallet className="w-20 h-20 text-emerald-600" />
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+            <div className="flex items-start justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Dana Tidak Terikat</h3>
+              <Wallet className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Dana Tidak Terikat</h3>
-              <p className="text-xs text-slate-400 mb-3">Operasional Masjid</p>
+              <p className="text-xs text-slate-400 mb-2 font-medium">Operasional Masjid</p>
               <div className="text-2xl font-bold text-slate-900">{formatCurrency(saldoTidakTerbatas.saldo_akhir)}</div>
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              <Target className="w-20 h-20 text-blue-600" />
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+            <div className="flex items-start justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Dana Terikat</h3>
+              <Target className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Dana Terikat</h3>
-              <p className="text-xs text-slate-400 mb-3">Wakaf & Proyek Khusus</p>
+              <p className="text-xs text-slate-400 mb-2 font-medium">Wakaf & Proyek Khusus</p>
               <div className="text-2xl font-bold text-slate-900">
                 {formatCurrency(laporanTerbatas.reduce((sum, item) => sum + item.saldo_tersisa, 0))}
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              <TrendingDown className="w-20 h-20 text-orange-500" />
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+            <div className="flex items-start justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Total Pengeluaran</h3>
+              <TrendingDown className="w-5 h-5 text-orange-500" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Total Pengeluaran</h3>
-              <p className="text-xs text-slate-400 mb-3">Periode Berjalan</p>
+              <p className="text-xs text-slate-400 mb-2 font-medium">Periode Berjalan</p>
               <div className="text-2xl font-bold text-slate-900">{formatCurrency(saldoTidakTerbatas.pengeluaran)}</div>
             </div>
           </div>

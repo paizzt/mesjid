@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CustomSelect } from '../../components/CustomSelect';
 import { masjidAPI, asetTidakTerbatasAPI, asetTerbatasAPI, kategoriAPI, kasAPI } from '../../services/api';
-import { Plus, Loader2, DollarSign, TrendingUp, TrendingDown, X } from 'lucide-react';
+import { Plus, Loader2, TrendingUp, TrendingDown, X } from 'lucide-react';
 import type { Kategori, SumberDana } from '../../types';
 
 const InputTransaksi: React.FC = () => {
@@ -402,7 +402,7 @@ const InputTransaksi: React.FC = () => {
                 Jumlah (Rp)
               </label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-bold">Rp</span>
                 <input
                   type="number"
                   value={jumlah}

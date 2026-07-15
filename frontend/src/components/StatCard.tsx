@@ -19,15 +19,15 @@ const StatCard: React.FC<StatCardProps> = ({
   formatValue = (val) => val.toLocaleString('id-ID'),
 }) => {
   return (
-    <div className={`${colorClass} rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform duration-200`}>
-      <div className="flex items-center justify-between">
+    <div className={`${colorClass} rounded-2xl shadow-sm p-6 text-white transition-all duration-300 hover:shadow-md hover:-translate-y-1`}>
+      <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm opacity-90 mb-1">{title}</p>
-          <p className="text-3xl font-bold mb-1">{formatValue(value)}</p>
-          <p className="text-xs opacity-75">{subtext}</p>
+          <p className="text-sm font-medium opacity-90 mb-2">{title}</p>
+          <p className="text-3xl font-bold tracking-tight mb-2">{formatValue(value)}</p>
+          <p className="text-xs font-medium opacity-80">{subtext}</p>
         </div>
-        <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-          <Icon className="w-7 h-7" />
+        <div className="p-3 bg-white/10 rounded-xl">
+          <Icon className="w-6 h-6" />
         </div>
       </div>
     </div>

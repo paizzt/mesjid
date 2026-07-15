@@ -4,7 +4,7 @@ import axios from 'axios';
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   (typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? 'http://localhost:4000/api'
+    ? 'http://localhost:3000/api'
     : '/api');
 
 const api = axios.create({

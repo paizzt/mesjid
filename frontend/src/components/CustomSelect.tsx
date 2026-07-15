@@ -24,17 +24,20 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   
   React.Children.forEach(children, child => {
     if (React.isValidElement(child) && child.type === 'option') {
+      const optionChild = child as React.ReactElement<any>;
       options.push({
-        value: child.props.value !== undefined ? child.props.value : child.props.children?.toString() || '',
-        label: child.props.children
+        value: optionChild.props.value !== undefined ? optionChild.props.value : optionChild.props.children?.toString() || '',
+        label: optionChild.props.children
       });
     } else if (React.isValidElement(child) && child.type === React.Fragment) {
        // If options are wrapped in a fragment
-       React.Children.forEach(child.props.children, subChild => {
+       const fragmentChild = child as React.ReactElement<any>;
+       React.Children.forEach(fragmentChild.props.children, subChild => {
          if (React.isValidElement(subChild) && subChild.type === 'option') {
+            const subOptionChild = subChild as React.ReactElement<any>;
             options.push({
-              value: subChild.props.value !== undefined ? subChild.props.value : subChild.props.children?.toString() || '',
-              label: subChild.props.children
+              value: subOptionChild.props.value !== undefined ? subOptionChild.props.value : subOptionChild.props.children?.toString() || '',
+              label: subOptionChild.props.children
             });
          }
        });

@@ -48,7 +48,7 @@ const Dashboard: React.FC = () => {
         { path: '/dashboard', icon: LayoutDashboard, label: 'Ringkasan', roles: ['takmir', 'bendahara', 'jamaah'] },
         { path: '/dashboard/kas', icon: Wallet, label: 'Buku Kas & Bank', roles: ['takmir', 'bendahara'] },
         { path: '/dashboard/keuangan', icon: FileInput, label: 'Catat Transaksi', roles: ['takmir', 'bendahara'] },
-        { path: '/dashboard/laporan', icon: FileText, label: 'Laporan (ISAK 35)', roles: ['takmir', 'bendahara'] },
+        { path: '/dashboard/laporan', icon: FileText, label: 'Laporan', roles: ['takmir', 'bendahara'] },
         { path: '/dashboard/jadwal-shalat', icon: Clock, label: 'Jadwal Shalat', roles: ['takmir', 'bendahara', 'jamaah'] },
       ]
     },
@@ -84,8 +84,7 @@ const Dashboard: React.FC = () => {
       {/* Mobile Header */}
       <div className="md:hidden bg-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-2">
-          <Mosque className="w-6 h-6 text-emerald-600" />
-          <span className="font-bold text-lg text-slate-800">SIM Masjid</span>
+          <span className="font-bold text-xl text-slate-800 tracking-wider">SIMAD</span>
         </div>
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -98,7 +97,7 @@ const Dashboard: React.FC = () => {
       {/* Overlay for mobile */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-slate-900/20  z-40 md:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -110,20 +109,19 @@ const Dashboard: React.FC = () => {
         } fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transition-transform duration-300 flex flex-col shadow-xl`}
       >
         {/* Logo - Desktop Only */}
-        <div className="hidden md:flex p-6 items-center gap-2 border-b border-slate-800">
-          <Mosque className="w-8 h-8 text-emerald-400" />
-          <span className="font-bold text-lg">SIM Masjid</span>
+        <div className="hidden md:flex p-6 items-center justify-center border-b border-slate-800">
+          <span className="font-bold text-2xl tracking-wider text-emerald-400">SIMAD</span>
         </div>
 
         {/* Close button for mobile */}
-        <div className="md:hidden p-4 flex items-center justify-between border-b border-slate-800">
-          <div className="flex items-center gap-2">
-            <Mosque className="w-8 h-8 text-emerald-400" />
-            <span className="font-bold text-lg">SIM Masjid</span>
+        <div className="md:hidden p-4 flex items-center justify-between border-b border-slate-800 relative">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="font-bold text-2xl tracking-wider text-emerald-400">SIMAD</span>
           </div>
+          <div className="w-8"></div> {/* Spacer for flex balance */}
           <button
             onClick={() => setIsSidebarOpen(false)}
-            className="p-2 hover:bg-slate-800 rounded-lg text-slate-400"
+            className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 relative z-10"
           >
             <X className="w-5 h-5" />
           </button>
@@ -188,7 +186,7 @@ const Dashboard: React.FC = () => {
             </button>
 
             {isProfileOpen && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-slate-800/90 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl overflow-hidden transform transition-all duration-200 origin-bottom">
+              <div className="absolute bottom-full left-0 right-0 mb-2 bg-slate-800 border border-slate-700/50 rounded-xl shadow-xl overflow-hidden transform transition-all duration-200 origin-bottom">
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 p-3.5 text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all duration-200 font-medium group"
@@ -214,9 +212,8 @@ const Dashboard: React.FC = () => {
               <Menu className="w-5 h-5" />
             </button>
             {!isSidebarOpen && (
-              <div className="flex items-center gap-2">
-                <Mosque className="w-5 h-5 text-emerald-600" />
-                <span className="font-bold text-slate-800">SIM Masjid</span>
+              <div className="flex items-center">
+                <span className="font-bold text-xl text-slate-800 tracking-wider">SIMAD</span>
               </div>
             )}
           </div>
