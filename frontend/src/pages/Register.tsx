@@ -251,9 +251,9 @@ const Register: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/login')}
-              className="px-6 py-2.5 md:py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm md:text-base"
+              className="px-6 py-2.5 md:py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm md:text-base flex items-center justify-center gap-2 text-gray-700"
             >
-              Login
+              Kembali
             </button>
           </div>
         </form>
