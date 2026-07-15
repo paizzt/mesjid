@@ -10,14 +10,14 @@ async function seed() {
 
         console.log('Membuat password hash...');
         const salt = await bcrypt.genSalt(10);
-        // User requested password: '0895333660777' for testing
-        const hashedPassword = await bcrypt.hash('0895333660777', salt);
+        // User requested password: '12345678' for testing
+        const hashedPassword = await bcrypt.hash('12345678', salt);
 
         console.log('Membuat akun pengguna (3 Roles)...');
         const takmir = await db.User.create({
             username: 'takmir',
-            nama_lengkap: 'Reza Maulana (Takmir)',
-            email: 'saya@rezamaulana.com',
+            nama_lengkap: 'Takmir Masjid',
+            email: 'takmir@gmail.com',
             password: hashedPassword,
             role: 'takmir',
             status_verifikasi: 'approved'
@@ -25,8 +25,8 @@ async function seed() {
 
         const bendahara = await db.User.create({
             username: 'bendahara',
-            nama_lengkap: 'Reza Maulana (Bendahara)',
-            email: 'bendahara@rezamaulana.com',
+            nama_lengkap: 'Bendahara Masjid',
+            email: 'bendahara@gmail.com',
             password: hashedPassword,
             role: 'bendahara',
             status_verifikasi: 'approved'
@@ -34,8 +34,8 @@ async function seed() {
 
         const jamaah = await db.User.create({
             username: 'jamaah',
-            nama_lengkap: 'Reza Maulana (Jamaah)',
-            email: 'jamaah@rezamaulana.com',
+            nama_lengkap: 'Jamaah Masjid',
+            email: 'jamaah@gmail.com',
             password: hashedPassword,
             role: 'jamaah',
             status_verifikasi: 'approved'

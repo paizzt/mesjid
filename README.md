@@ -25,8 +25,14 @@ Aplikasi ini dilengkapi dengan skrip otomatis (start.bat) yang akan menangani pr
 6. Buka browser web Anda (disarankan Google Chrome atau Microsoft Edge) dan ketikkan alamat:
    http://localhost:5173
 7. Halaman Login SIMAD akan terbuka. Gunakan akun berikut untuk masuk:
+   **Akun Takmir:**
    - Email: takmir@gmail.com
    - Password: 12345678
+
+   **Akun Bendahara:**
+   - Email: bendahara@gmail.com
+   - Password: 12345678
+
 
 ## Panduan Penyelesaian Masalah (Troubleshooting)
 
