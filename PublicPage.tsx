@@ -232,12 +232,12 @@ export default function PublicPage() {
           <Megaphone className="w-4 h-4 flex-shrink-0" />
           <div className="overflow-hidden">
             <div className="animate-marquee whitespace-nowrap inline-block">
-              <span className="mx-8">📢 Himbauan Protokol Kesehatan: Gunakan masker saat beraktivitas di tempat umum</span>
-              <span className="mx-8">🧹 Program Kebersihan: Gotong royong setiap Jumat pukul 07.00-09.00 WIB</span>
-              <span className="mx-8">🤲 Bantuan Sosial Ramadan: Pendaftaran telah dibuka di kantor kelurahan</span>
-              <span className="mx-8">📢 Himbauan Protokol Kesehatan: Gunakan masker saat beraktivitas di tempat umum</span>
-              <span className="mx-8">🧹 Program Kebersihan: Gotong royong setiap Jumat pukul 07.00-09.00 WIB</span>
-              <span className="mx-8">🤲 Bantuan Sosial Ramadan: Pendaftaran telah dibuka di kantor kelurahan</span>
+              <span className="mx-8">Himbauan Protokol Kesehatan: Gunakan masker saat beraktivitas di tempat umum</span>
+              <span className="mx-8">Program Kebersihan: Gotong royong setiap Jumat pukul 07.00-09.00 WIB</span>
+              <span className="mx-8">Bantuan Sosial Ramadan: Pendaftaran telah dibuka di kantor kelurahan</span>
+              <span className="mx-8">Himbauan Protokol Kesehatan: Gunakan masker saat beraktivitas di tempat umum</span>
+              <span className="mx-8">Program Kebersihan: Gotong royong setiap Jumat pukul 07.00-09.00 WIB</span>
+              <span className="mx-8">Bantuan Sosial Ramadan: Pendaftaran telah dibuka di kantor kelurahan</span>
             </div>
           </div>
         </div>
@@ -370,7 +370,7 @@ export default function PublicPage() {
               <div className="p-3 border-b border-gray-200 flex-shrink-0">
                 <div className="flex items-center gap-2">
                   <Building2 className="w-5 h-5 text-blue-600" />
-                  <h3 className="text-lg font-bold text-gray-800">🕋 Live Streaming Masjidil Haram</h3>
+                  <h3 className="text-lg font-bold text-gray-800">Live Streaming Masjidil Haram</h3>
                 </div>
               </div>
               <div className="relative flex-1 bg-black">
@@ -386,7 +386,7 @@ export default function PublicPage() {
               </div>
               <div className="p-2 bg-gradient-to-r from-green-50 to-emerald-50 flex-shrink-0">
                 <p className="text-xs text-gray-600 text-center">
-                  🕋 Streaming langsung dari Masjidil Haram, Mekah
+                  Streaming langsung dari Masjidil Haram, Mekah
                 </p>
               </div>
             </div>
@@ -403,9 +403,9 @@ export default function PublicPage() {
             <div className="bg-blue-50 rounded-xl border-2 border-blue-200 p-3 flex-shrink-0">
               <h4 className="font-bold text-gray-800 mb-2 text-sm">Informasi Kontak</h4>
               <div className="space-y-1 text-xs text-gray-700">
-                <p>📍 Jl. Raya Masjid No. 123, Jakarta</p>
-                <p>📞 (021) 1234-5678</p>
-                <p>📧 info@masjid-alikhlas.id</p>
+                <p>Jl. Raya Masjid No. 123, Jakarta</p>
+                <p>(021) 1234-5678</p>
+                <p>info@masjid-alikhlas.id</p>
               </div>
             </div>
           </div>

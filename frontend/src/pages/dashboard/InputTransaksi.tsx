@@ -253,7 +253,7 @@ const InputTransaksi: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        <div className="loader"></div>
       </div>
     );
   }
@@ -269,26 +269,7 @@ const InputTransaksi: React.FC = () => {
       {/* Main Form Card */}
       <div className="bg-white rounded-xl shadow-md p-4 md:p-6 lg:p-8 max-w-3xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-          {/* Masjid Selection */}
-          {masjidList.length > 1 && (
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Pilih Masjid
-              </label>
-              <CustomSelect
-                value={selectedMasjid || ''}
-                onChange={(e) => setSelectedMasjid(Number(e.target.value))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                required
-              >
-                {masjidList.map(masjid => (
-                  <option key={masjid.id} value={masjid.id}>
-                    {masjid.nama_masjid}
-                  </option>
-                ))}
-              </CustomSelect>
-            </div>
-          )}
+
 
           {/* Jenis Aset - Radio Button */}
           <div>
@@ -602,7 +583,7 @@ const InputTransaksi: React.FC = () => {
             >
               {submitting ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <div className="loader"></div>
                   Menyimpan...
                 </>
               ) : (

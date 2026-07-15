@@ -30,7 +30,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        <div className="loader"></div>
       </div>
     );
   }
@@ -49,7 +49,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        <div className="loader"></div>
       </div>
     );
   }
@@ -67,7 +67,7 @@ const RoleProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: st
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        <div className="loader"></div>
       </div>
     );
   }

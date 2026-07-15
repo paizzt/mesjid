@@ -94,7 +94,7 @@ const PublicTransparencyPage = () => {
 
         {loading && (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+            <div className="loader"></div>
           </div>
         )}
         {error && (
@@ -121,7 +121,7 @@ const PublicTransparencyPage = () => {
                 {/* Summary block */}
                 <div className="rounded-2xl border border-slate-200 p-6 md:p-8 bg-slate-50">
                   {loadingBalance && (
-                    <div className="flex items-center justify-center gap-3 text-slate-500 py-8"><Loader2 className="w-8 h-8 animate-spin text-emerald-600" /> <span className="text-lg">Memuat ringkasan...</span></div>
+                    <div className="flex items-center justify-center gap-3 text-slate-500 py-8"><div className="loader"></div> <span className="text-lg">Memuat ringkasan...</span></div>
                   )}
                   {!loadingBalance && balance && (
                     <div className="space-y-6">

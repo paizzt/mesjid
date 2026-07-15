@@ -72,7 +72,7 @@ const JadwalShalat: React.FC = () => {
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         {loading ? (
           <div className="flex justify-center items-center h-48">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+            <div className="loader"></div>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

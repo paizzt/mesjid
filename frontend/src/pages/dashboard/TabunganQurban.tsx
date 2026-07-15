@@ -158,18 +158,7 @@ const TabunganQurban: React.FC = () => {
       </div>
 
       <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-        <div className="flex flex-col md:flex-row items-center gap-4 max-w-sm">
-          <label className="font-semibold text-slate-700 text-sm whitespace-nowrap">Masjid:</label>
-          <CustomSelect
-            value={selectedMasjid || ''}
-            onChange={(e) => setSelectedMasjid(Number(e.target.value))}
-            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
-          >
-            {masjidList.map(m => (
-              <option key={m.id} value={m.id}>{m.nama_masjid}</option>
-            ))}
-          </CustomSelect>
-        </div>
+        
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -188,7 +177,7 @@ const TabunganQurban: React.FC = () => {
               {loading ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center">
-                    <Loader2 className="w-6 h-6 animate-spin text-emerald-600 mx-auto" />
+                    <div className="loader"></div>
                   </td>
                 </tr>
               ) : tabunganList.length === 0 ? (

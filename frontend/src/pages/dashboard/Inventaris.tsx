@@ -137,18 +137,7 @@ const Inventaris: React.FC = () => {
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
-        <label className="font-semibold text-slate-700 text-sm">Masjid:</label>
-        <CustomSelect
-          value={selectedMasjid || ''}
-          onChange={(e) => setSelectedMasjid(Number(e.target.value))}
-          className="w-full max-w-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
-        >
-          {masjidList.map(m => (
-            <option key={m.id} value={m.id}>{m.nama_masjid}</option>
-          ))}
-        </CustomSelect>
-      </div>
+      
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="overflow-x-auto">
@@ -165,7 +154,7 @@ const Inventaris: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center"><Loader2 className="w-8 h-8 animate-spin text-emerald-600 mx-auto" /></td>
+                  <td colSpan={5} className="p-8 text-center"><div className="loader"></div></td>
                 </tr>
               ) : inventarisList.length === 0 ? (
                 <tr>

@@ -176,7 +176,7 @@ const PublicKasPage = () => {
       <main className="max-w-7xl mx-auto px-4 py-8">
         {loading && (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+            <div className="loader"></div>
           </div>
         )}
 
@@ -286,10 +286,7 @@ const PublicKasPage = () => {
                   <span className="text-xs text-red-600 block mb-1">Total Pengeluaran (-)</span>
                   <span className="font-semibold text-red-700 text-lg">{formatIDR(balance.period_expense)}</span>
                 </div>
-                <div className="bg-slate-800 p-4 rounded-lg border border-slate-700 text-white relative shadow-md">
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-white rounded-full p-0.5 border border-slate-200 hidden md:block">
-                    <ArrowRight className="w-3 h-3 text-slate-800" />
-                  </div>
+                <div className="bg-slate-800 p-4 rounded-lg border border-slate-700 text-white shadow-md">
                   <span className="text-xs text-slate-300 block mb-1">Saldo Akhir (=)</span>
                   <span className="font-semibold text-lg">{formatIDR(balance.saldo_akhir)}</span>
                 </div>

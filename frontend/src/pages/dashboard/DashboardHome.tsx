@@ -237,7 +237,7 @@ const DashboardHome: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        <div className="loader"></div>
       </div>
     );
   }
@@ -367,19 +367,7 @@ const DashboardHome: React.FC = () => {
             </a>
           )}
           
-          {masjidList.length > 1 && (
-            <CustomSelect
-              value={selectedMasjid || ''}
-              onChange={(e) => setSelectedMasjid(Number(e.target.value))}
-              className="w-full sm:w-auto px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm md:text-base bg-white"
-            >
-              {masjidList.map(masjid => (
-                <option key={masjid.id} value={masjid.id}>
-                  {masjid.nama_masjid}
-                </option>
-              ))}
-            </CustomSelect>
-          )}
+          
         </div>
       </div>
 
@@ -548,7 +536,6 @@ const DashboardHome: React.FC = () => {
             <div className="bg-slate-800 p-4 rounded-lg text-white relative shadow-md">
               <span className="text-xs text-slate-300 block mb-1">Saldo Akhir</span>
               <span className="font-semibold text-lg flex items-center gap-2">
-                <ArrowRight className="w-4 h-4" />
                 {formatCurrency(cashFlowSummary.totalSaldo)}
               </span>
               <p className="text-[11px] text-slate-300 mt-1">Seluruh Dana</p>

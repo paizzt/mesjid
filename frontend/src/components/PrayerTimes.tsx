@@ -42,7 +42,7 @@ const PrayerTimes: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center p-6 bg-white rounded-3xl shadow-lg border border-slate-200 mb-8">
-        <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+        <div className="loader"></div>
       </div>
     );
   }

@@ -116,7 +116,7 @@ const AturKas: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-emerald-600" /></div>;
+    return <div className="flex justify-center p-8"><div className="loader"></div></div>;
   }
 
   return (

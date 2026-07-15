@@ -96,7 +96,7 @@ const Laporan: React.FC = () => {
   if (loading || !reportData) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        <div className="loader"></div>
       </div>
     );
   }
@@ -170,22 +170,6 @@ const Laporan: React.FC = () => {
 
           {/* Column 2-3: Date/Month/Year Filters */}
           <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {masjidList.length > 1 && (
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-2">Masjid</label>
-                <CustomSelect
-                  value={selectedMasjid || ''}
-                  onChange={e => setSelectedMasjid(Number(e.target.value))}
-                  className="w-full p-2 border border-slate-300 rounded-md text-xs md:text-sm bg-white"
-                >
-                  {masjidList.map(m => (
-                    <option key={m.id} value={m.id}>
-                      {m.nama_masjid}
-                    </option>
-                  ))}
-                </CustomSelect>
-              </div>
-            )}
 
             {reportPeriod === 'weekly' && (
               <div>

@@ -120,7 +120,7 @@ const Pengaturan: React.FC = () => {
   if (loading && !settings.id) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        <div className="loader"></div>
       </div>
     );
   }
@@ -136,24 +136,7 @@ const Pengaturan: React.FC = () => {
       </div>
 
       {/* Masjid Selector */}
-      {masjidList.length > 1 && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
-          <label className="block text-sm font-semibold text-slate-700 mb-2">
-            Pilih Masjid
-          </label>
-          <CustomSelect
-            value={selectedMasjidId || ''}
-            onChange={(e) => setSelectedMasjidId(Number(e.target.value))}
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-          >
-            {masjidList.map(masjid => (
-              <option key={masjid.id} value={masjid.id}>
-                {masjid.nama_masjid}
-              </option>
-            ))}
-          </CustomSelect>
-        </div>
-      )}
+
 
       {/* Alerts */}
       {error && (
@@ -390,7 +373,7 @@ const Pengaturan: React.FC = () => {
           >
             {saving ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <div className="loader"></div>
                 Menyimpan...
               </>
             ) : (

@@ -241,7 +241,7 @@ const Register: React.FC = () => {
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <div className="loader"></div>
                   Memproses...
                 </>
               ) : (

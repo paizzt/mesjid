@@ -295,7 +295,7 @@ export default function PublicMasjidPage() {
         <div className="space-y-3">
           {loading || !prayerTimes ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+              <div className="loader"></div>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -325,7 +325,7 @@ export default function PublicMasjidPage() {
         <div className="space-y-3">
           {loading || !hadith ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+              <div className="loader"></div>
             </div>
           ) : (
             <div className="space-y-2">
@@ -405,7 +405,7 @@ export default function PublicMasjidPage() {
     return (
       <div className="h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+          <div className="loader"></div>
           <p className="text-gray-600">Memuat informasi masjid...</p>
         </div>
       </div>
@@ -544,7 +544,7 @@ export default function PublicMasjidPage() {
               </div>
               {loading || !prayerTimes ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                  <div className="loader"></div>
                 </div>
               ) : (
                 <div className="grid md:grid-cols-2 gap-4">
@@ -576,7 +576,7 @@ export default function PublicMasjidPage() {
               </div>
               {loading || !hadith ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                  <div className="loader"></div>
                 </div>
               ) : (
                 <div className="flex-1 min-h-0 overflow-y-auto">
@@ -623,7 +623,7 @@ export default function PublicMasjidPage() {
               <div className="p-3 border-b border-gray-200 flex-shrink-0">
                 <div className="flex items-center gap-2">
                   <Building2 className="w-5 h-5 text-blue-600" />
-                  <h3 className="text-base font-bold text-gray-800">🕋 Live Masjidil Haram</h3>
+                  <h3 className="text-base font-bold text-gray-800">Live Masjidil Haram</h3>
                 </div>
               </div>
               <div className="relative flex-1 bg-black">
@@ -638,7 +638,7 @@ export default function PublicMasjidPage() {
               </div>
               <div className="p-2 bg-gradient-to-r from-green-50 to-emerald-50 flex-shrink-0">
                 <p className="text-xs text-gray-600 text-center">
-                  🕋 Streaming langsung dari Masjidil Haram, Mekah
+                  Streaming langsung dari Masjidil Haram, Mekah
                 </p>
               </div>
             </div>
@@ -646,10 +646,10 @@ export default function PublicMasjidPage() {
             {/* Info Card */}
             <div className="bg-blue-50 rounded-xl border-2 border-blue-200 p-3 flex-shrink-0">
               <h4 className="font-bold text-gray-800 mb-2 text-sm">Informasi Kontak</h4>
-              <div className="space-y-1 text-xs text-gray-700">
-                <p>📍 {masjidInfo.alamat}</p>
-                {masjidInfo.telepon && <p>📞 {masjidInfo.telepon}</p>}
-                {masjidInfo.email && <p>📧 {masjidInfo.email}</p>}
+              <div className="space-y-2 text-xs text-gray-700">
+                <p className="flex items-center gap-2"><MapPin className="w-4 h-4 text-emerald-600" /> {masjidInfo.alamat}</p>
+                {masjidInfo.telepon && <p className="flex items-center gap-2"><Phone className="w-4 h-4 text-emerald-600" /> {masjidInfo.telepon}</p>}
+                {masjidInfo.email && <p className="flex items-center gap-2"><Mail className="w-4 h-4 text-emerald-600" /> {masjidInfo.email}</p>}
               </div>
             </div>
           </div>
