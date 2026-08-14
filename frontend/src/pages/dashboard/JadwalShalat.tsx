@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Clock, MapPin } from 'lucide-react';
 import axios from 'axios';
 
+import Swal from 'sweetalert2';
 interface Jadwal {
   imsak: string;
   subuh: string;

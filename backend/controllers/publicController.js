@@ -1,4 +1,4 @@
-const { AsetTidakTerbatas, AsetTerbatas, Masjid } = require('../models');
+const { AsetTidakTerbatas, AsetTerbatas, Masjid, Agenda } = require('../models');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 
@@ -279,6 +279,32 @@ exports.getMasjidDetail = async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching masjid detail:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Get agendas for public
+exports.getAgendas = async (req, res) => {
+  try {
+    const { masjidId } = req.params;
+    const { status } = req.query; // 'upcoming'
+    
+    let whereClause = { MasjidId: masjidId };
+    
+    if (status === 'upcoming') {
+      whereClause.tanggal = {
+        [Op.gte]: new Date()
+      };
+    }
+    
+    const agendas = await Agenda.findAll({
+      where: whereClause,
+      order: [['tanggal', 'ASC'], ['waktu_mulai', 'ASC']]
+    });
+    
+    res.json({ data: agendas });
+  } catch (error) {
+    console.error('Error fetching agendas:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

@@ -3,6 +3,7 @@ import { CustomSelect } from '../../components/CustomSelect';
 import { kasAPI, masjidAPI } from '../../services/api';
 import { Plus, Trash2, Edit2, Loader2, Wallet, Building2, ArrowRightLeft } from 'lucide-react';
 
+import Swal from 'sweetalert2';
 const AturKas: React.FC = () => {
   const [kasList, setKasList] = useState<any[]>([]);
   const [selectedMasjid, setSelectedMasjid] = useState<number | null>(null);
@@ -78,19 +79,20 @@ const AturKas: React.FC = () => {
       setShowModal(false);
       fetchKas(selectedMasjid);
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Gagal menyimpan');
+      Swal.fire({ icon: 'error', title: error.response?.data?.message || 'Gagal menyimpan' })
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Yakin ingin menghapus akun ini?')) return;
+    const result = await Swal.fire({ title: 'Yakin ingin menghapus akun ini?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya', cancelButtonText: 'Batal', confirmButtonColor: '#10B981', cancelButtonColor: '#EF4444' });
+    if (!result.isConfirmed) return;
     try {
       await kasAPI.delete(id);
       if (selectedMasjid) fetchKas(selectedMasjid);
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Gagal menghapus');
+      Swal.fire({ icon: 'error', title: error.response?.data?.message || 'Gagal menghapus' })
     }
   };
 
@@ -103,9 +105,9 @@ const AturKas: React.FC = () => {
       setShowTransfer(false);
       fetchKas(selectedMasjid);
       setTransferData({ dari_kas_id: '', ke_kas_id: '', jumlah: '', keterangan: '' });
-      alert('Transfer berhasil');
+      Swal.fire({ icon: 'success', title: 'Transfer berhasil', timer: 1500, showConfirmButton: false })
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Gagal transfer');
+      Swal.fire({ icon: 'error', title: error.response?.data?.message || 'Gagal transfer' })
     } finally {
       setSubmitting(false);
     }

@@ -38,5 +38,8 @@ export default defineConfig({
         changeOrigin: true,
       }
     }
+  },
+  optimizeDeps: {
+    include: ['jspdf', 'html2canvas']
   }
 })

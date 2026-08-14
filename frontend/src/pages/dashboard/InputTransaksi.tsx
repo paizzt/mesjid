@@ -4,6 +4,7 @@ import { masjidAPI, asetTidakTerbatasAPI, asetTerbatasAPI, kategoriAPI, kasAPI }
 import { Plus, Loader2, TrendingUp, TrendingDown, X } from 'lucide-react';
 import type { Kategori, SumberDana } from '../../types';
 
+import Swal from 'sweetalert2';
 const InputTransaksi: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -126,7 +127,7 @@ const InputTransaksi: React.FC = () => {
 
   const handleAddKategori = async () => {
     if (!newKategoriName.trim()) {
-      alert('Nama kategori tidak boleh kosong');
+      Swal.fire({ icon: 'info', title: 'Nama kategori tidak boleh kosong', timer: 1500, showConfirmButton: false })
       return;
     }
 
@@ -148,10 +149,10 @@ const InputTransaksi: React.FC = () => {
       setNewKategoriName('');
       setShowAddKategori(false);
       
-      alert('Kategori berhasil ditambahkan!');
+      Swal.fire({ icon: 'success', title: 'Kategori berhasil ditambahkan!', timer: 1500, showConfirmButton: false })
     } catch (error: any) {
       console.error('Error creating kategori:', error);
-      alert(error.response?.data?.message || 'Gagal menambahkan kategori');
+      Swal.fire({ icon: 'error', title: error.response?.data?.message || 'Gagal menambahkan kategori' })
     }
   };
 
@@ -159,22 +160,22 @@ const InputTransaksi: React.FC = () => {
     e.preventDefault();
     
     if (!selectedMasjid) {
-      alert('Masjid belum dipilih');
+      Swal.fire({ icon: 'info', title: 'Masjid belum dipilih', timer: 1500, showConfirmButton: false })
       return;
     }
 
     if (!selectedKasId) {
-      alert('Akun Kas/Bank belum dipilih. Harap buat akun kas terlebih dahulu di menu Buku Kas & Bank.');
+      Swal.fire({ icon: 'info', title: 'Akun Kas/Bank belum dipilih. Harap buat akun kas terlebih dahulu di menu Buku Kas & Bank.', timer: 1500, showConfirmButton: false })
       return;
     }
 
     if (!jumlah || parseFloat(jumlah) <= 0) {
-      alert('Jumlah harus lebih dari 0');
+      Swal.fire({ icon: 'info', title: 'Jumlah harus lebih dari 0', timer: 1500, showConfirmButton: false })
       return;
     }
 
     if (!selectedKategoriId) {
-      alert('Kategori belum dipilih');
+      Swal.fire({ icon: 'info', title: 'Kategori belum dipilih', timer: 1500, showConfirmButton: false })
       return;
     }
 
@@ -200,7 +201,7 @@ const InputTransaksi: React.FC = () => {
         // For pengeluaran, use selected sumber dana
         if (tipe === 'pengeluaran') {
           if (!selectedSumberDana) {
-            alert('Pilih sumber dana terlebih dahulu');
+            Swal.fire({ icon: 'info', title: 'Pilih sumber dana terlebih dahulu', timer: 1500, showConfirmButton: false })
             setSubmitting(false);
             return;
           }
@@ -208,7 +209,7 @@ const InputTransaksi: React.FC = () => {
         } else {
           // For pemasukan, tujuanDana must be filled
           if (!finalTujuanDana) {
-            alert('Tujuan dana harus diisi untuk Aset Terbatas');
+            Swal.fire({ icon: 'info', title: 'Tujuan dana harus diisi untuk Aset Terbatas', timer: 1500, showConfirmButton: false })
             setSubmitting(false);
             return;
           }
@@ -222,7 +223,7 @@ const InputTransaksi: React.FC = () => {
         });
       }
 
-      alert('Transaksi berhasil disimpan!');
+      Swal.fire({ icon: 'success', title: 'Transaksi berhasil disimpan!', timer: 1500, showConfirmButton: false })
       
       // Reset form
       setJumlah('');
@@ -234,7 +235,7 @@ const InputTransaksi: React.FC = () => {
       
     } catch (error: any) {
       console.error('Error:', error);
-      alert(error.response?.data?.message || 'Gagal menyimpan transaksi');
+      Swal.fire({ icon: 'error', title: error.response?.data?.message || 'Gagal menyimpan transaksi' })
     } finally {
       setSubmitting(false);
     }

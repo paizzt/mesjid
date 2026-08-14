@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import { Building as Mosque, User, Mail, Lock, Phone, MapPin, Loader2 } from 'lucide-react';
 
+import Swal from 'sweetalert2';
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -52,7 +53,7 @@ const Register: React.FC = () => {
     try {
       const { confirmPassword, ...dataToSend } = formData;
       await authAPI.register(dataToSend);
-      alert('Registrasi berhasil! Silakan tunggu verifikasi dari admin.');
+      Swal.fire({ icon: 'success', title: 'Registrasi berhasil! Silakan tunggu verifikasi dari admin.', timer: 1500, showConfirmButton: false })
       navigate('/login');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registrasi gagal');

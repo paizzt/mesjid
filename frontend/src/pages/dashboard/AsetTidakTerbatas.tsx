@@ -4,6 +4,7 @@ import { asetTidakTerbatasAPI, masjidAPI } from '../../services/api';
 import { Trash2, Loader2, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 import { type AsetTidakTerbatas } from '../../types';
 
+import Swal from 'sweetalert2';
 const AsetTidakTerbatasPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [masjidList, setMasjidList] = useState<any[]>([]);
@@ -58,14 +59,15 @@ const AsetTidakTerbatasPage: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Yakin ingin menghapus data ini?')) return;
+    const result = await Swal.fire({ title: 'Yakin ingin menghapus data ini?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya', cancelButtonText: 'Batal', confirmButtonColor: '#10B981', cancelButtonColor: '#EF4444' });
+    if (!result.isConfirmed) return;
 
     try {
       await asetTidakTerbatasAPI.delete(id);
       fetchData();
       fetchSaldo();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Gagal menghapus data');
+      Swal.fire({ icon: 'error', title: error.response?.data?.message || 'Gagal menghapus data' })
     }
   };
 

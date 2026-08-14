@@ -52,6 +52,7 @@ export const authAPI = {
   register: (data: any) => api.post('/auth/register', data),
   login: (data: any) => api.post('/auth/login', data),
   getProfile: () => api.get('/auth/profile'),
+  updateProfile: (data: any) => api.put('/auth/profile', data),
   getPendingUsers: () => api.get('/auth/users/pending'),
   getAllUsers: () => api.get('/auth/users'),
   verifyUser: (userId: number, data: any) => api.put(`/auth/users/${userId}/verify`, data),

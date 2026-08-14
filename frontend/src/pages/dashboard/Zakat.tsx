@@ -3,6 +3,7 @@ import { CustomSelect } from '../../components/CustomSelect';
 import { masjidAPI, zakatAPI } from '../../services/api';
 import { Plus, Edit2, Trash2, Loader2, Target, Package, Users } from 'lucide-react';
 
+import Swal from 'sweetalert2';
 const Zakat: React.FC = () => {
   const [masjidList, setMasjidList] = useState<any[]>([]);
   const [selectedMasjid, setSelectedMasjid] = useState<number | null>(null);
@@ -103,18 +104,19 @@ const Zakat: React.FC = () => {
       fetchZakat();
     } catch (error) {
       console.error('Error saving zakat:', error);
-      alert('Gagal menyimpan data zakat');
+      Swal.fire({ icon: 'error', title: 'Gagal menyimpan data zakat', timer: 1500, showConfirmButton: false })
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Yakin ingin menghapus data zakat ini?')) {
+    const result = await Swal.fire({ title: 'Yakin ingin menghapus data zakat ini?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya', cancelButtonText: 'Batal', confirmButtonColor: '#10B981', cancelButtonColor: '#EF4444' });
+    if (result.isConfirmed) {
       try {
         await zakatAPI.delete(id);
         fetchZakat();
       } catch (error) {
         console.error('Error deleting zakat:', error);
-        alert('Gagal menghapus data zakat');
+        Swal.fire({ icon: 'error', title: 'Gagal menghapus data zakat', timer: 1500, showConfirmButton: false })
       }
     }
   };

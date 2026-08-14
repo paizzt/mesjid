@@ -3,6 +3,7 @@ import { authAPI } from '../../services/api';
 import { type User } from '../../types';
 import { Loader2, CheckCircle, XCircle, Clock, Search } from 'lucide-react';
 
+import Swal from 'sweetalert2';
 const ListUser: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);

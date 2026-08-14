@@ -3,6 +3,7 @@ import { CustomSelect } from '../../components/CustomSelect';
 import { masjidAPI, inventarisAPI } from '../../services/api';
 import { Plus, Edit2, Trash2, Loader2, Archive, Calendar, CheckCircle2, AlertTriangle, XCircle, MapPin } from 'lucide-react';
 
+import Swal from 'sweetalert2';
 const Inventaris: React.FC = () => {
   const [masjidList, setMasjidList] = useState<any[]>([]);
   const [selectedMasjid, setSelectedMasjid] = useState<number | null>(null);
@@ -77,17 +78,18 @@ const Inventaris: React.FC = () => {
       setIsModalOpen(false);
       fetchInventaris();
     } catch (error) {
-      alert('Gagal menyimpan inventaris');
+      Swal.fire({ icon: 'error', title: 'Gagal menyimpan inventaris', timer: 1500, showConfirmButton: false })
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Yakin menghapus data inventaris ini?')) {
+    const result = await Swal.fire({ title: 'Yakin menghapus data inventaris ini?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya', cancelButtonText: 'Batal', confirmButtonColor: '#10B981', cancelButtonColor: '#EF4444' });
+    if (result.isConfirmed) {
       try {
         await inventarisAPI.delete(id);
         fetchInventaris();
       } catch (error) {
-        alert('Gagal menghapus inventaris');
+        Swal.fire({ icon: 'error', title: 'Gagal menghapus inventaris', timer: 1500, showConfirmButton: false })
       }
     }
   };

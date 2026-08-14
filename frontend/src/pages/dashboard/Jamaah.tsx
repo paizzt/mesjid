@@ -3,6 +3,7 @@ import { CustomSelect } from '../../components/CustomSelect';
 import { masjidAPI, jamaahAPI } from '../../services/api';
 import { Plus, Edit2, Trash2, Loader2, Users } from 'lucide-react';
 
+import Swal from 'sweetalert2';
 const Jamaah: React.FC = () => {
   const [masjidList, setMasjidList] = useState<any[]>([]);
   const [selectedMasjid, setSelectedMasjid] = useState<number | null>(null);
@@ -84,18 +85,19 @@ const Jamaah: React.FC = () => {
       fetchJamaah();
     } catch (error) {
       console.error('Error saving jamaah:', error);
-      alert('Gagal menyimpan data jamaah');
+      Swal.fire({ icon: 'error', title: 'Gagal menyimpan data jamaah', timer: 1500, showConfirmButton: false })
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Yakin ingin menghapus data jamaah ini?')) {
+    const result = await Swal.fire({ title: 'Yakin ingin menghapus data jamaah ini?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya', cancelButtonText: 'Batal', confirmButtonColor: '#10B981', cancelButtonColor: '#EF4444' });
+    if (result.isConfirmed) {
       try {
         await jamaahAPI.delete(id);
         fetchJamaah();
       } catch (error) {
         console.error('Error deleting jamaah:', error);
-        alert('Gagal menghapus data jamaah');
+        Swal.fire({ icon: 'error', title: 'Gagal menghapus data jamaah', timer: 1500, showConfirmButton: false })
       }
     }
   };

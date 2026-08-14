@@ -3,6 +3,7 @@ import { CustomSelect } from '../../components/CustomSelect';
 import { masjidAPI, pengumumanAPI } from '../../services/api';
 import { Plus, Edit2, Trash2, Loader2, Megaphone, Bell, CalendarClock } from 'lucide-react';
 
+import Swal from 'sweetalert2';
 const Pengumuman: React.FC = () => {
   const [masjidList, setMasjidList] = useState<any[]>([]);
   const [selectedMasjid, setSelectedMasjid] = useState<number | null>(null);
@@ -73,17 +74,18 @@ const Pengumuman: React.FC = () => {
       setIsModalOpen(false);
       fetchPengumuman();
     } catch (error) {
-      alert('Gagal menyimpan pengumuman');
+      Swal.fire({ icon: 'error', title: 'Gagal menyimpan pengumuman', timer: 1500, showConfirmButton: false })
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Yakin menghapus pengumuman ini?')) {
+    const result = await Swal.fire({ title: 'Yakin menghapus pengumuman ini?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya', cancelButtonText: 'Batal', confirmButtonColor: '#10B981', cancelButtonColor: '#EF4444' });
+    if (result.isConfirmed) {
       try {
         await pengumumanAPI.delete(id);
         fetchPengumuman();
       } catch (error) {
-        alert('Gagal menghapus pengumuman');
+        Swal.fire({ icon: 'error', title: 'Gagal menghapus pengumuman', timer: 1500, showConfirmButton: false })
       }
     }
   };

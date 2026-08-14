@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { CustomSelect } from '../../components/CustomSelect';
-import { masjidAPI } from '../../services/api';
-import { Loader2, Save, Building2, Clock, User, MapPin, Phone, Mail, Megaphone } from 'lucide-react';
+import { masjidAPI, authAPI } from '../../services/api';
+import { Loader2, Save, Building2, Clock, User, MapPin, Phone, Mail, Megaphone, UserCircle } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import Swal from 'sweetalert2';
 
 interface MasjidSettings {
   id: number;
@@ -16,10 +18,20 @@ interface MasjidSettings {
 }
 
 const Pengaturan: React.FC = () => {
+  const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [masjidList, setMasjidList] = useState<any[]>([]);
   const [selectedMasjidId, setSelectedMasjidId] = useState<number | null>(null);
+  
+  const [profileSettings, setProfileSettings] = useState({
+    nama_lengkap: '',
+    username: '',
+    email: '',
+    no_hp: '',
+    password: ''
+  });
+
   const [settings, setSettings] = useState<MasjidSettings>({
     id: 0,
     nama_masjid: '',
@@ -36,7 +48,16 @@ const Pengaturan: React.FC = () => {
 
   useEffect(() => {
     fetchMasjidList();
-  }, []);
+    if (user) {
+      setProfileSettings({
+        nama_lengkap: user.nama_lengkap || '',
+        username: user.username || '',
+        email: user.email || '',
+        no_hp: user.no_hp || '',
+        password: ''
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     if (selectedMasjidId) {
@@ -91,21 +112,66 @@ const Pengaturan: React.FC = () => {
       ...prev,
       [name]: name === 'countdown_duration' ? parseInt(value) || 0 : value
     }));
+    
+    // Auto sync profile settings nama_lengkap if ketua_pengurus is changed
+    if (name === 'ketua_pengurus') {
+      setProfileSettings(prev => ({
+        ...prev,
+        nama_lengkap: value
+      }));
+    }
+  };
+
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setProfileSettings(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
     setSaving(true);
 
     try {
+      // Save Masjid Settings
       await masjidAPI.update(settings.id, settings);
-      setSuccess('Pengaturan berhasil disimpan!');
-      setTimeout(() => setSuccess(''), 3000);
+      
+      // Save Profile Settings if changed in Pengaturan Akun
+      const profileToUpdate: any = {};
+      
+      // Sync Ketua Pengurus with User Profile Name if it's different and user didn't explicitly change it in Pengaturan Akun form
+      const finalNamaLengkap = profileSettings.nama_lengkap !== user?.nama_lengkap 
+        ? profileSettings.nama_lengkap 
+        : settings.ketua_pengurus;
+
+      if (finalNamaLengkap !== user?.nama_lengkap) profileToUpdate.nama_lengkap = finalNamaLengkap;
+      if (profileSettings.username !== user?.username) profileToUpdate.username = profileSettings.username;
+      if (profileSettings.email !== user?.email) profileToUpdate.email = profileSettings.email;
+      if (profileSettings.no_hp !== user?.no_hp) profileToUpdate.no_hp = profileSettings.no_hp;
+      if (profileSettings.password) profileToUpdate.password = profileSettings.password;
+
+      if (Object.keys(profileToUpdate).length > 0) {
+        const response = await authAPI.updateProfile(profileToUpdate);
+        updateUser(response.data.user);
+        setProfileSettings(prev => ({ ...prev, password: '', nama_lengkap: finalNamaLengkap }));
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: 'Pengaturan berhasil disimpan!',
+        confirmButtonColor: '#10b981'
+      });
     } catch (error: any) {
       console.error('Error saving settings:', error);
-      setError(error.response?.data?.message || 'Gagal menyimpan pengaturan.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal!',
+        text: error.response?.data?.message || 'Gagal menyimpan pengaturan.',
+        confirmButtonColor: '#ef4444'
+      });
     } finally {
       setSaving(false);
     }
@@ -138,20 +204,97 @@ const Pengaturan: React.FC = () => {
       {/* Masjid Selector */}
 
 
-      {/* Alerts */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl">
-          {success}
-        </div>
-      )}
-
       {/* Settings Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Informasi Akun */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-indigo-50 rounded-lg">
+              <UserCircle className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-800">Pengaturan Akun</h2>
+              <p className="text-xs text-slate-500">Kelola informasi profil akun Anda</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Nama Lengkap
+                </label>
+                <input
+                  type="text"
+                  name="nama_lengkap"
+                  value={profileSettings.nama_lengkap}
+                  onChange={handleProfileChange}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  placeholder="Nama Lengkap Anda"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  name="username"
+                  value={profileSettings.username}
+                  onChange={handleProfileChange}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  placeholder="Username Anda"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <Mail className="w-4 h-4 inline mr-1" />
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={profileSettings.email}
+                  onChange={handleProfileChange}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  placeholder="Email Anda"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <Phone className="w-4 h-4 inline mr-1" />
+                  Nomor HP
+                </label>
+                <input
+                  type="tel"
+                  name="no_hp"
+                  value={profileSettings.no_hp}
+                  onChange={handleProfileChange}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  placeholder="Nomor HP Anda"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                Password Baru (Opsional)
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={profileSettings.password}
+                onChange={handleProfileChange}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                placeholder="Biarkan kosong jika tidak ingin mengubah password"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Informasi Masjid */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
           <div className="flex items-center gap-3 mb-6">
@@ -176,7 +319,6 @@ const Pengaturan: React.FC = () => {
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 placeholder="Contoh: Masjid Al-Ikhlas"
-                required
               />
             </div>
 
@@ -192,7 +334,6 @@ const Pengaturan: React.FC = () => {
                 rows={3}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 placeholder="Alamat lengkap masjid"
-                required
               />
             </div>
 

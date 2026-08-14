@@ -2,8 +2,12 @@ import React, { useEffect, useState, useRef } from 'react';
 import { CustomSelect } from '../../components/CustomSelect';
 import { masjidAPI, laporanAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import { Loader2, Printer, Eye, EyeOff, FileText } from 'lucide-react';
+import { Loader2, Printer, Eye, EyeOff, FileText, QrCode, Download } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import { jsPDF } from 'jspdf';
+import { toJpeg } from 'html-to-image';
 
+import Swal from 'sweetalert2';
 const MONTH_NAMES = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
 type ReportPeriod = 'weekly' | 'monthly' | 'yearly';
@@ -14,6 +18,7 @@ const Laporan: React.FC = () => {
   const printableRef = useRef<HTMLDivElement>(null);
   
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
   const [masjidList, setMasjidList] = useState<any[]>([]);
   const [selectedMasjid, setSelectedMasjid] = useState<number | null>(null);
   
@@ -54,6 +59,8 @@ const Laporan: React.FC = () => {
       setLoading(false);
     }
   };
+
+
 
   const fetchLaporanData = async () => {
     if (!selectedMasjid) return;
@@ -116,12 +123,15 @@ const Laporan: React.FC = () => {
               Pilih periode laporan untuk dicetak atau disimpan sebagai PDF
             </p>
           </div>
-          <button
-            onClick={handlePrint}
-            className="w-full md:w-auto flex items-center justify-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-lg hover:bg-slate-800 font-bold shadow-sm transition-all active:scale-95 text-sm md:text-base"
-          >
-            <Printer size={20} /> Cetak / Simpan PDF
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                <button
+                  onClick={handlePrint}
+                  className="flex items-center gap-2 px-3 md:px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm md:text-base font-medium shadow-sm"
+                >
+                  <Printer className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="hidden md:inline">Cetak / Simpan PDF</span>
+                </button>
+          </div>
         </div>
 
         {/* Filter Controls */}
@@ -239,11 +249,13 @@ const Laporan: React.FC = () => {
         className="bg-white p-6 md:p-8 lg:p-12 shadow-sm border border-slate-200 mx-auto max-w-[210mm] print:shadow-none print:border-0 print:p-0 print:max-w-none print:w-full"
       >
         {/* Header */}
-        <div className="text-center border-b-2 border-slate-800 pb-6 mb-8">
+        <div className="relative text-center border-b-2 border-slate-800 pb-6 mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900 uppercase tracking-wide mb-2">
             {masjidData?.nama || 'Masjid'}
           </h1>
           <p className="text-sm md:text-base text-slate-500">{masjidData?.alamat || ''}</p>
+          
+
         </div>
 
         {/* Report Title */}

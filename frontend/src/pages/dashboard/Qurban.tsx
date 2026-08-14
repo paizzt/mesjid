@@ -3,6 +3,7 @@ import { CustomSelect } from '../../components/CustomSelect';
 import { masjidAPI, qurbanAPI } from '../../services/api';
 import { Plus, Trash2, Loader2, Users } from 'lucide-react';
 
+import Swal from 'sweetalert2';
 const Qurban: React.FC = () => {
   const [masjidList, setMasjidList] = useState<any[]>([]);
   const [selectedMasjid, setSelectedMasjid] = useState<number | null>(null);
@@ -95,7 +96,7 @@ const Qurban: React.FC = () => {
       fetchHewan();
     } catch (error) {
       console.error('Error saving hewan:', error);
-      alert('Gagal menyimpan hewan qurban');
+      Swal.fire({ icon: 'error', title: 'Gagal menyimpan hewan qurban', timer: 1500, showConfirmButton: false })
     }
   };
 
@@ -118,28 +119,30 @@ const Qurban: React.FC = () => {
       fetchHewan();
     } catch (error) {
       console.error('Error saving peserta:', error);
-      alert('Gagal menambah peserta qurban');
+      Swal.fire({ icon: 'error', title: 'Gagal menambah peserta qurban', timer: 1500, showConfirmButton: false })
     }
   };
 
   const deleteHewan = async (id: number) => {
-    if (window.confirm('Yakin ingin menghapus hewan ini beserta semua pesertanya?')) {
+    const result = await Swal.fire({ title: 'Yakin ingin menghapus hewan ini beserta semua pesertanya?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya', cancelButtonText: 'Batal', confirmButtonColor: '#10B981', cancelButtonColor: '#EF4444' });
+    if (result.isConfirmed) {
       try {
         await qurbanAPI.deleteHewan(id);
         fetchHewan();
       } catch (error) {
-        alert('Gagal menghapus hewan');
+        Swal.fire({ icon: 'error', title: 'Gagal menghapus hewan', timer: 1500, showConfirmButton: false })
       }
     }
   };
 
   const deletePeserta = async (id: number) => {
-    if (window.confirm('Yakin ingin menghapus peserta ini?')) {
+    const result = await Swal.fire({ title: 'Yakin ingin menghapus peserta ini?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya', cancelButtonText: 'Batal', confirmButtonColor: '#10B981', cancelButtonColor: '#EF4444' });
+    if (result.isConfirmed) {
       try {
         await qurbanAPI.deletePeserta(id);
         fetchHewan();
       } catch (error) {
-        alert('Gagal menghapus peserta');
+        Swal.fire({ icon: 'error', title: 'Gagal menghapus peserta', timer: 1500, showConfirmButton: false })
       }
     }
   };

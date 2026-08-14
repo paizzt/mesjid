@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { CustomSelect } from '../../components/CustomSelect';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import { useAuth } from '../../contexts/AuthContext';
-import { asetTidakTerbatasAPI, asetTerbatasAPI, masjidAPI, authAPI } from '../../services/api';
-import { Wallet, TrendingUp, TrendingDown, Target, Loader2, Users, Building, CheckCircle, Clock, Coins, ArrowRight, ChevronLeft, ChevronRight, FileText, PieChart as PieChartIcon } from 'lucide-react';
+import { asetTidakTerbatasAPI, asetTerbatasAPI, masjidAPI, authAPI, agendaAPI } from '../../services/api';
+import { Wallet, TrendingUp, TrendingDown, Target, Loader2, Users, Building, CheckCircle, Clock, Coins, ArrowRight, ChevronLeft, ChevronRight, FileText, PieChart as PieChartIcon, CalendarDays, MapPin, QrCode, Printer, Download, Copy, ExternalLink } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 import {
   PieChart,
@@ -12,6 +14,7 @@ import {
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
 } from 'recharts';
+import { QRCodeSVG } from 'qrcode.react';
 
 const DashboardHome: React.FC = () => {
   const { user } = useAuth();
@@ -23,6 +26,7 @@ const DashboardHome: React.FC = () => {
   const [saldoTidakTerbatas, setSaldoTidakTerbatas] = useState<any>(null);
   const [laporanTerbatas, setLaporanTerbatas] = useState<any[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+  const [agendas, setAgendas] = useState<any[]>([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
 
@@ -113,15 +117,25 @@ const DashboardHome: React.FC = () => {
     if (!selectedMasjid) return;
 
     try {
-      const [saldoRes, laporanRes, tidakTerbatasRes, terbatasRes] = await Promise.all([
+      const [saldoRes, laporanRes, tidakTerbatasRes, terbatasRes, agendaRes] = await Promise.all([
         asetTidakTerbatasAPI.getSaldo(selectedMasjid),
         asetTerbatasAPI.getLaporan(selectedMasjid),
         asetTidakTerbatasAPI.getAll(selectedMasjid),
         asetTerbatasAPI.getAll(selectedMasjid),
+        agendaAPI.getAll(selectedMasjid),
       ]);
       
       setSaldoTidakTerbatas(saldoRes.data);
       setLaporanTerbatas(laporanRes.data);
+      
+      // Filter upcoming agendas (future dates or today)
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const upcomingAgendas = (agendaRes.data || [])
+        .filter((a: any) => new Date(a.tanggal) >= now)
+        .sort((a: any, b: any) => new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime())
+        .slice(0, 5); // Limit to 5 upcoming agendas
+      setAgendas(upcomingAgendas);
       
       // Filter transactions by selected period
       const startDate = new Date(selectedYear, selectedMonth, 1);
@@ -194,6 +208,39 @@ const DashboardHome: React.FC = () => {
 
   const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
   const currentPeriod = `${monthNames[selectedMonth]} ${selectedYear}`;
+
+  const publicLink = selectedMasjid ? `${window.location.origin}/transparansi?masjid_id=${selectedMasjid}` : '';
+
+  const handleCopyLink = () => {
+    if (publicLink) {
+      navigator.clipboard.writeText(publicLink);
+      Swal.fire({ icon: 'success', title: 'Tautan berhasil disalin!', timer: 1500, showConfirmButton: false });
+    }
+  };
+
+  const handleDownloadQR = () => {
+    const svg = document.getElementById('qr-transparansi');
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      if (ctx) {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+      }
+      const pngFile = canvas.toDataURL('image/png');
+      const downloadLink = document.createElement('a');
+      downloadLink.download = `QR-Transparansi.png`;
+      downloadLink.href = pngFile;
+      downloadLink.click();
+    };
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+  };
 
   const expenseCategories = useMemo(() => {
     if (!recentTransactions || recentTransactions.length === 0) return [];
@@ -700,6 +747,102 @@ const DashboardHome: React.FC = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* QR Transparansi Publik Section */}
+      {selectedMasjid && user?.role !== 'admin' && (
+        <div className="bg-slate-50/50 rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row gap-6 items-center md:items-start mt-6 relative overflow-hidden">
+          {/* Decorative Background */}
+          <div className="absolute right-0 top-0 w-64 h-64 bg-emerald-100 rounded-full blur-3xl opacity-30 -mr-20 -mt-20 pointer-events-none"></div>
+          
+          <div className="flex-shrink-0 bg-white p-3 rounded-xl shadow-sm border border-slate-100 z-10">
+            <QRCodeSVG 
+              id="qr-transparansi"
+              value={publicLink} 
+              size={120} 
+              level="M" 
+              includeMargin={false}
+            />
+          </div>
+          
+          <div className="flex flex-col justify-center w-full z-10">
+            <div className="flex items-center gap-2 mb-2 text-emerald-600">
+              <QrCode className="w-4 h-4" />
+              <h3 className="text-xs font-bold tracking-wider uppercase">TRANSPARANSI PUBLIK</h3>
+            </div>
+            
+            <p className="text-sm md:text-base text-slate-600 mb-4">
+              Bagikan QR/tautan ini agar jamaah bisa memantau keuangan masjid tanpa perlu login.
+            </p>
+            
+            <div className="text-xs md:text-sm text-slate-500 bg-white px-4 py-2.5 rounded-lg border border-slate-200 font-mono mb-5 overflow-hidden text-ellipsis whitespace-nowrap shadow-sm">
+              {publicLink}
+            </div>
+            
+            <div className="flex flex-wrap gap-3">
+              <a href={`/dashboard/laporan`} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm">
+                <Printer className="w-4 h-4" /> Poster cetak
+              </a>
+              <button onClick={handleDownloadQR} className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm hover:border-slate-300">
+                <Download className="w-4 h-4" /> Unduh QR
+              </button>
+              <button onClick={handleCopyLink} className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm hover:border-slate-300">
+                <Copy className="w-4 h-4" /> Salin tautan
+              </button>
+              <a href={publicLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm hover:border-slate-300">
+                <ExternalLink className="w-4 h-4" /> Buka
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Agenda & Kajian */}
+      {agendas.length > 0 && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mt-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                <CalendarDays className="w-5 h-5 text-indigo-600" />
+                Agenda & Kajian Mendatang
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">Kegiatan masjid yang akan datang</p>
+            </div>
+            <a 
+              href="/dashboard/agenda" 
+              className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+            >
+              Lihat Semua <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {agendas.map((agenda, idx) => (
+              <div key={idx} className="border border-slate-100 rounded-xl p-4 hover:shadow-md transition-shadow bg-slate-50 group">
+                <div className="flex justify-between items-start mb-3">
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                    agenda.kategori === 'Kajian' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    {agenda.kategori}
+                  </span>
+                  <div className="text-right">
+                    <div className="text-sm font-bold text-slate-700">{new Date(agenda.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</div>
+                    <div className="text-xs text-slate-500">{agenda.waktu_mulai.substring(0, 5)} - {agenda.waktu_selesai ? agenda.waktu_selesai.substring(0, 5) : 'Selesai'}</div>
+                  </div>
+                </div>
+                <h4 className="font-bold text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors">{agenda.judul}</h4>
+                {agenda.pembicara && (
+                  <p className="text-sm text-slate-600 mb-2 flex items-center gap-1">
+                    <Users className="w-4 h-4 text-slate-400" /> {agenda.pembicara}
+                  </p>
+                )}
+                <p className="text-xs text-slate-500 flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400" /> {agenda.lokasi || 'Masjid'}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       )}

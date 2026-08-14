@@ -3,6 +3,7 @@ import { masjidAPI, asetTidakTerbatasAPI, asetTerbatasAPI } from '../../services
 import { type Masjid } from '../../types';
 import { Loader2, Search, MapPin, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
 
+import Swal from 'sweetalert2';
 interface MasjidWithSaldo extends Masjid {
   saldo_tidak_terbatas?: number;
   saldo_terbatas?: number;

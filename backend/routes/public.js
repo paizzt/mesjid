@@ -6,5 +6,6 @@ const publicController = require('../controllers/publicController');
 router.get('/balance/:masjidId', publicController.getPublicBalance);
 router.get('/masjids', publicController.getAllMasjids);
 router.get('/masjid/:masjidId', publicController.getMasjidDetail);
+router.get('/agenda/:masjidId', publicController.getAgendas);
 
 module.exports = router;

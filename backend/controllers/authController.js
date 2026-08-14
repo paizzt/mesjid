@@ -150,6 +150,59 @@ exports.getProfile = async (req, res) => {
     }
 };
 
+// Update Profile
+exports.updateProfile = async (req, res) => {
+    try {
+        const { username, email, nama_lengkap, no_hp, password } = req.body;
+        const user = await User.findByPk(req.user.id);
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User tidak ditemukan.' });
+        }
+
+        // Cek jika username/email digunakan oleh user lain
+        if (username || email) {
+            const existingUser = await User.findOne({ 
+                where: { 
+                    [require('sequelize').Op.or]: [
+                        username ? { username } : null, 
+                        email ? { email } : null
+                    ].filter(Boolean),
+                    id: { [require('sequelize').Op.ne]: user.id }
+                } 
+            });
+
+            if (existingUser) {
+                return res.status(400).json({ message: 'Username atau email sudah digunakan oleh pengguna lain.' });
+            }
+        }
+
+        if (username) user.username = username;
+        if (email) user.email = email;
+        if (nama_lengkap) user.nama_lengkap = nama_lengkap;
+        if (no_hp !== undefined) user.no_hp = no_hp;
+        if (password) {
+            user.password = await bcrypt.hash(password, 10);
+        }
+
+        await user.save();
+
+        res.json({
+            message: 'Profil berhasil diupdate!',
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                nama_lengkap: user.nama_lengkap,
+                no_hp: user.no_hp,
+                role: user.role
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Admin: Get semua user yang pending verifikasi
 exports.getPendingUsers = async (req, res) => {
     try {

@@ -3,6 +3,7 @@ import { CustomSelect } from '../../components/CustomSelect';
 import { masjidAPI, agendaAPI } from '../../services/api';
 import { Plus, Edit2, Trash2, Loader2, Calendar, Clock, MapPin, User, CalendarDays } from 'lucide-react';
 
+import Swal from 'sweetalert2';
 const Agenda: React.FC = () => {
   const [masjidList, setMasjidList] = useState<any[]>([]);
   const [selectedMasjid, setSelectedMasjid] = useState<number | null>(null);
@@ -81,17 +82,18 @@ const Agenda: React.FC = () => {
       setIsModalOpen(false);
       fetchAgenda();
     } catch (error) {
-      alert('Gagal menyimpan agenda');
+      Swal.fire({ icon: 'error', title: 'Gagal menyimpan agenda', timer: 1500, showConfirmButton: false })
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Yakin menghapus agenda ini?')) {
+    const result = await Swal.fire({ title: 'Yakin menghapus agenda ini?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya', cancelButtonText: 'Batal', confirmButtonColor: '#10B981', cancelButtonColor: '#EF4444' });
+    if (result.isConfirmed) {
       try {
         await agendaAPI.delete(id);
         fetchAgenda();
       } catch (error) {
-        alert('Gagal menghapus agenda');
+        Swal.fire({ icon: 'error', title: 'Gagal menghapus agenda', timer: 1500, showConfirmButton: false })
       }
     }
   };

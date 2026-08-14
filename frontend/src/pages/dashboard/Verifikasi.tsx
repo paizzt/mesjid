@@ -3,6 +3,7 @@ import { authAPI } from '../../services/api';
 import { CheckCircle2, XCircle, Loader2, Clock, MapPin, Building as Mosque } from 'lucide-react';
 import { type User } from '../../types';
 
+import Swal from 'sweetalert2';
 const Verifikasi: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
@@ -38,9 +39,9 @@ const Verifikasi: React.FC = () => {
       setCatatan('');
       setSelectedUser(null);
       fetchUsers();
-      alert(`User berhasil ${verifikasiType === 'approved' ? 'disetujui' : 'ditolak'}`);
+      Swal.fire({ icon: 'success', title: `User berhasil ${verifikasiType === 'approved' ? 'disetujui' : 'ditolak'}`, timer: 1500, showConfirmButton: false })
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Gagal memverifikasi user');
+      Swal.fire({ icon: 'error', title: error.response?.data?.message || 'Gagal memverifikasi user' })
     }
   };
 

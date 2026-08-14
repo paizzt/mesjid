@@ -3,6 +3,7 @@ import { CustomSelect } from '../../components/CustomSelect';
 import { masjidAPI, tabunganQurbanAPI } from '../../services/api';
 import { Plus, Edit2, Trash2, Loader2, PiggyBank, History } from 'lucide-react';
 
+import Swal from 'sweetalert2';
 const TabunganQurban: React.FC = () => {
   const [masjidList, setMasjidList] = useState<any[]>([]);
   const [selectedMasjid, setSelectedMasjid] = useState<number | null>(null);
@@ -89,7 +90,7 @@ const TabunganQurban: React.FC = () => {
       fetchTabungan();
     } catch (error) {
       console.error('Error saving tabungan:', error);
-      alert('Gagal menyimpan tabungan');
+      Swal.fire({ icon: 'error', title: 'Gagal menyimpan tabungan', timer: 1500, showConfirmButton: false })
     }
   };
 
@@ -111,17 +112,18 @@ const TabunganQurban: React.FC = () => {
       fetchTabungan();
     } catch (error) {
       console.error('Error saving setoran:', error);
-      alert('Gagal menambah setoran');
+      Swal.fire({ icon: 'error', title: 'Gagal menambah setoran', timer: 1500, showConfirmButton: false })
     }
   };
 
   const deleteTabungan = async (id: number) => {
-    if (window.confirm('Yakin ingin menghapus peserta tabungan ini? Riwayat setoran akan ikut terhapus.')) {
+    const result = await Swal.fire({ title: 'Yakin ingin menghapus peserta tabungan ini? Riwayat setoran akan ikut terhapus.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya', cancelButtonText: 'Batal', confirmButtonColor: '#10B981', cancelButtonColor: '#EF4444' });
+    if (result.isConfirmed) {
       try {
         await tabunganQurbanAPI.delete(id);
         fetchTabungan();
       } catch (error) {
-        alert('Gagal menghapus tabungan');
+        Swal.fire({ icon: 'error', title: 'Gagal menghapus tabungan', timer: 1500, showConfirmButton: false })
       }
     }
   };

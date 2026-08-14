@@ -9,6 +9,7 @@ router.post('/login', authController.login);
 
 // Protected routes (memerlukan authentication)
 router.get('/profile', authenticate, authController.getProfile);
+router.put('/profile', authenticate, authController.updateProfile);
 
 // Admin only routes
 router.get('/users/pending', authenticate, isAdmin, authController.getPendingUsers);

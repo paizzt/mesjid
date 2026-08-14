@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Building2, CheckCircle2, MapPin, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
+import { Building2, CheckCircle2, MapPin, TrendingUp, TrendingDown, Loader2, Calendar, Clock } from 'lucide-react';
 import api from '../services/api';
 import PrayerTimes from '../components/PrayerTimes';
 
@@ -26,6 +26,7 @@ const PublicTransparencyPage = () => {
   const [error, setError] = useState('');
   const [balance, setBalance] = useState<BalanceData | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
+  const [agendas, setAgendas] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,10 +37,14 @@ const PublicTransparencyPage = () => {
         if (data.length > 0) {
           setLoadingBalance(true);
           try {
-            const balanceRes = await api.get(`/public/balance/${data[0].id}`);
+            const [balanceRes, agendaRes] = await Promise.all([
+              api.get(`/public/balance/${data[0].id}`),
+              api.get(`/public/agenda/${data[0].id}?status=upcoming`)
+            ]);
             setBalance(balanceRes.data?.data || null);
+            setAgendas(agendaRes.data?.data || []);
           } catch (err) {
-            console.error('Error fetching balance:', err);
+            console.error('Error fetching data:', err);
           } finally {
             setLoadingBalance(false);
           }
@@ -135,13 +140,23 @@ const PublicTransparencyPage = () => {
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex items-center gap-3 bg-emerald-50 text-emerald-700 p-4 rounded-xl border border-emerald-100">
-                          <TrendingUp className="w-6 h-6" /> 
-                          <span className="font-medium text-lg">Pemasukan terhimpun</span>
+                        <div className="flex items-center justify-between gap-3 bg-emerald-50 text-emerald-700 p-4 rounded-xl border border-emerald-100">
+                          <div className="flex items-center gap-3">
+                            <TrendingUp className="w-6 h-6" /> 
+                            <span className="font-medium text-lg">Pemasukan terhimpun</span>
+                          </div>
+                          <span className="font-bold text-lg md:text-xl">{formatIDR(balance.period_income)}</span>
                         </div>
-                        <div className="flex items-center gap-3 bg-red-50 text-red-700 p-4 rounded-xl border border-red-100 md:justify-end">
-                          <TrendingDown className="w-6 h-6" /> 
-                          <span className="font-medium text-lg">Pengeluaran tercatat</span>
+                        <div className="flex items-center justify-between gap-3 bg-red-50 text-red-700 p-4 rounded-xl border border-red-100 md:justify-end">
+                          <div className="flex items-center gap-3 md:hidden">
+                            <TrendingDown className="w-6 h-6" /> 
+                            <span className="font-medium text-lg">Pengeluaran tercatat</span>
+                          </div>
+                          <span className="font-bold text-lg md:text-xl md:order-first">{formatIDR(balance.period_expense)}</span>
+                          <div className="hidden md:flex items-center gap-3">
+                            <span className="font-medium text-lg">Pengeluaran tercatat</span>
+                            <TrendingDown className="w-6 h-6" /> 
+                          </div>
                         </div>
                       </div>
 
@@ -159,6 +174,34 @@ const PublicTransparencyPage = () => {
                     <p className="text-lg text-slate-500 text-center py-8">Ringkasan kas belum tersedia untuk masjid ini.</p>
                   )}
                 </div>
+
+                {/* Agenda & Kajian block */}
+                {agendas.length > 0 && (
+                  <div className="rounded-2xl border border-slate-200 p-6 md:p-8 bg-white mt-2">
+                    <div className="flex items-center gap-2 mb-6">
+                      <Calendar className="w-6 h-6 text-emerald-600" />
+                      <h3 className="text-xl md:text-2xl font-bold text-slate-800">Agenda & Kajian Mendatang</h3>
+                    </div>
+                    <div className="space-y-4">
+                      {agendas.map((agenda) => (
+                        <div key={agenda.id} className="flex flex-col md:flex-row gap-4 p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-slate-100 transition-colors">
+                          <div className="flex flex-col justify-center items-center bg-emerald-100 text-emerald-700 p-3 rounded-lg min-w-[80px]">
+                            <span className="text-xs font-semibold uppercase">{new Date(agenda.tanggal).toLocaleDateString('id-ID', { month: 'short' })}</span>
+                            <span className="text-2xl font-bold leading-none">{new Date(agenda.tanggal).getDate()}</span>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-slate-800 text-lg">{agenda.judul}</h4>
+                            <p className="text-slate-600 mt-1 line-clamp-2">{agenda.deskripsi}</p>
+                            <div className="flex items-center gap-4 mt-3 text-sm text-slate-500 font-medium">
+                              <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {agenda.waktu_mulai.substring(0,5)} {agenda.waktu_selesai ? `- ${agenda.waktu_selesai.substring(0,5)}` : ''}</span>
+                              <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" /> {agenda.lokasi || 'Masjid'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
