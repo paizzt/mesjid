@@ -752,7 +752,7 @@ const DashboardHome: React.FC = () => {
       )}
 
       {/* QR Transparansi Publik Section */}
-      {selectedMasjid && user?.role !== 'admin' && (
+      {selectedMasjid && (user?.role as string) !== 'admin' && (
         <div className="bg-slate-50/50 rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row gap-6 items-center md:items-start mt-6 relative overflow-hidden">
           {/* Decorative Background */}
           <div className="absolute right-0 top-0 w-64 h-64 bg-emerald-100 rounded-full blur-3xl opacity-30 -mr-20 -mt-20 pointer-events-none"></div>

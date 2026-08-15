@@ -15,6 +15,8 @@ interface BalanceData {
   alamat: string;
   saldo_akhir: number;
   periode: string;
+  period_income?: number;
+  period_expense?: number;
 }
 
 const formatIDR = (val: number) =>
@@ -145,14 +147,14 @@ const PublicTransparencyPage = () => {
                             <TrendingUp className="w-6 h-6" /> 
                             <span className="font-medium text-lg">Pemasukan terhimpun</span>
                           </div>
-                          <span className="font-bold text-lg md:text-xl">{formatIDR(balance.period_income)}</span>
+                          <span className="font-bold text-lg md:text-xl">{formatIDR(balance.period_income || 0)}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3 bg-red-50 text-red-700 p-4 rounded-xl border border-red-100 md:justify-end">
                           <div className="flex items-center gap-3 md:hidden">
                             <TrendingDown className="w-6 h-6" /> 
                             <span className="font-medium text-lg">Pengeluaran tercatat</span>
                           </div>
-                          <span className="font-bold text-lg md:text-xl md:order-first">{formatIDR(balance.period_expense)}</span>
+                          <span className="font-bold text-lg md:text-xl md:order-first">{formatIDR(balance.period_expense || 0)}</span>
                           <div className="hidden md:flex items-center gap-3">
                             <span className="font-medium text-lg">Pengeluaran tercatat</span>
                             <TrendingDown className="w-6 h-6" /> 
