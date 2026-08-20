@@ -661,7 +661,6 @@ const DashboardHome: React.FC = () => {
                       cx="50%"
                       cy="50%"
                       outerRadius={window.innerWidth < 768 ? 80 : 100}
-                      label={(props) => window.innerWidth >= 768 ? String(props.name ?? '') : ''}
                     >
                       {laporanTerbatas.map((_entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
